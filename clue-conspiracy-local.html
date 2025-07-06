@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clue Conspiracy - Local Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .game-header {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .game-info {
+            display: flex;
+            gap: 30px;
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-item h3 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+
+        .status-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .health-hearts {
+            color: #ff6b6b;
+        }
+
+        .storm-clouds {
+            color: #74b9ff;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .game-board {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .board-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ffd700;
+            font-size: 1.3rem;
+        }
+
+        .locations-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .location {
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .location:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .location.current {
+            border-color: #ffd700;
+            background: rgba(255,215,0,0.2);
+        }
+
+        .location.disarmed {
+            border-color: #00b894;
+            background: rgba(0,184,148,0.2);
+        }
+
+        .location-name {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .trap-info {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .trap-strength {
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .trap-suit {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .trap-suit.triangle {
+            color: #ff6b6b;
+        }
+
+        .trap-suit.circle {
+            color: #74b9ff;
+        }
+
+        .players-panel {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .players-title {
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .player-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-item.current {
+            border-left: 4px solid #ffd700;
+        }
+
+        .player-name {
+            font-weight: bold;
+        }
+
+        .player-character {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .player-role {
+            font-size: 0.9rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .actions-panel {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .action-section {
+            display: none;
+        }
+
+        .action-section.active {
+            display: block;
+        }
+
+        .action-title {
+            margin-bottom: 15px;
+            color: #ffd700;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: #74b9ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0984e3;
+        }
+
+        .btn-success {
+            background: #00b894;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #00a085;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff5252;
+        }
+
+        .btn:disabled {
+            background: #636e72;
+            cursor: not-allowed;
+        }
+
+        .info-box {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-box h4 {
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .card:hover {
+            background: rgba(255,255,255,1);
+            transform: translateY(-2px);
+        }
+
+        .card.selected {
+            background: #74b9ff;
+            color: white;
+        }
+
+        .card.triangle::after {
+            content: '▲';
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 0.7rem;
+            color: #ff6b6b;
+        }
+
+        .card.circle::after {
+            content: '●';
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 0.7rem;
+            color: #74b9ff;
+        }
+
+        .game-log {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 8px;
+            margin-bottom: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .log-entry.important {
+            background: rgba(255,215,0,0.2);
+            border-left: 3px solid #ffd700;
+        }
+
+        .log-entry.danger {
+            background: rgba(255,107,107,0.2);
+            border-left: 3px solid #ff6b6b;
+        }
+
+        .log-entry.success {
+            background: rgba(78,205,196,0.2);
+            border-left: 3px solid #4ecdc4;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .locations-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .game-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕵️ Clue Conspiracy</h1>
+        
+        <div class="game-header">
+            <div class="game-info">
+                <div class="status-item">
+                    <h3>Game Phase</h3>
+                    <div class="status-value" id="game-phase">Setup</div>
+                </div>
+                <div class="status-item">
+                    <h3>Round</h3>
+                    <div class="status-value" id="round-number">1</div>
+                </div>
+                <div class="status-item">
+                    <h3>Mr. Coral's Health</h3>
+                    <div class="status-value health-hearts" id="coral-health">♥♥♥</div>
+                </div>
+                <div class="status-item">
+                    <h3>Storm Tracker</h3>
+                    <div class="status-value storm-clouds" id="storm-tracker">☁☁☁</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="game-board">
+                <h3 class="board-title">🏝️ Black Adder Resort</h3>
+                <div class="locations-grid" id="locations-grid">
+                    <!-- Locations will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="players-panel">
+                <h3 class="players-title">Players</h3>
+                <div id="players-list">
+                    <!-- Players will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <div class="actions-panel">
+            <!-- Setup Section -->
+            <div id="setup-section" class="action-section active">
+                <h3 class="action-title">Game Setup</h3>
+                <div class="form-group">
+                    <label>Number of Players (4-10):</label>
+                    <select id="player-count">
+                        <option value="4">4 Players</option>
+                        <option value="5">5 Players</option>
+                        <option value="6">6 Players</option>
+                        <option value="7">7 Players</option>
+                        <option value="8">8 Players</option>
+                        <option value="9">9 Players</option>
+                        <option value="10">10 Players</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="startGame()">Start Game</button>
+            </div>
+
+            <!-- Scout Actions -->
+            <div id="scout-section" class="action-section">
+                <h3 class="action-title">🎯 Scout: Choose Your Team</h3>
+                <div class="form-group">
+                    <label>Select Bodyguard:</label>
+                    <select id="bodyguard-select">
+                        <option value="">Choose bodyguard...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Select Team Members:</label>
+                    <div class="checkbox-group" id="team-selection">
+                        <!-- Team checkboxes will be populated -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Select Location:</label>
+                    <select id="location-select">
+                        <option value="">Choose location...</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="confirmScoutSelection()">Confirm Selection</button>
+            </div>
+
+            <!-- Voting Section -->
+            <div id="voting-section" class="action-section">
+                <h3 class="action-title">🗳️ Team Voting</h3>
+                <div class="info-box">
+                    <h4>Mission Details</h4>
+                    <p><strong>Scout:</strong> <span id="mission-scout">-</span></p>
+                    <p><strong>Bodyguard:</strong> <span id="mission-bodyguard">-</span></p>
+                    <p><strong>Team:</strong> <span id="mission-team">-</span></p>
+                    <p><strong>Location:</strong> <span id="mission-location">-</span></p>
+                </div>
+                <div class="info-box">
+                    <h4>Current Player: <span id="current-voter">-</span></h4>
+                    <p>Use FaceTime to discuss, then click your vote:</p>
+                </div>
+                <button class="btn btn-success" onclick="vote(true)">✓ Approve Mission</button>
+                <button class="btn btn-danger" onclick="vote(false)">✗ Reject Mission</button>
+            </div>
+
+            <!-- Disarm Section -->
+            <div id="disarm-section" class="action-section">
+                <h3 class="action-title">🔧 Disarm the Trap</h3>
+                <div class="info-box">
+                    <h4>Trap Information</h4>
+                    <p><strong>Location:</strong> <span id="trap-location">-</span></p>
+                    <p><strong>Trap Strength:</strong> <span id="trap-strength">-</span></p>
+                    <p><strong>Trap Type:</strong> <span id="trap-type">-</span></p>
+                </div>
+                <div class="info-box">
+                    <h4>Current Player: <span id="current-disarmer">-</span></h4>
+                    <p>Select cards to contribute:</p>
+                    <div class="cards-container" id="disarm-cards">
+                        <!-- Cards will be populated -->
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="submitDisarmCards()">Submit Cards</button>
+                <button class="btn btn-danger" onclick="skipDisarmTurn()">Skip Turn</button>
+            </div>
+
+            <!-- Game Over Section -->
+            <div id="game-over-section" class="action-section">
+                <h3 class="action-title">🎊 Game Over!</h3>
+                <div class="info-box" id="game-result">
+                    <!-- Game result will be populated -->
+                </div>
+                <button class="btn btn-primary" onclick="resetGame()">New Game</button>
+            </div>
+        </div>
+
+        <div class="game-log">
+            <h3>Game Log</h3>
+            <div id="log-container">
+                <div class="log-entry">Game initialized. Set up your players to begin!</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = {
+            phase: 'setup', // setup, scout, voting, disarm, game-over
+            round: 1,
+            players: [],
+            currentPlayerIndex: 0,
+            currentScout: null,
+            currentBodyguard: null,
+            currentTeam: [],
+            currentLocation: null,
+            plotLocation: null,
+            plotWeapon: null,
+            ringleader: null,
+            coralHealth: 3,
+            stormTracker: 0,
+            votes: [],
+            disarmedTraps: [],
+            selectedCards: [],
+            locations: ['Pool', 'Spa', 'Restaurant', 'Bar', 'Gym', 'Library', 'Ballroom', 'Conservatory', 'Terrace'],
+            weapons: ['Poison', 'Knife', 'Rope', 'Wrench', 'Candlestick', 'Revolver', 'Lead Pipe', 'Dumbbell', 'Trophy'],
+            characters: ['Miss Scarlett', 'Colonel Mustard', 'Mrs. White', 'Mr. Green', 'Mrs. Peacock', 'Professor Plum', 'Dr. Orchid', 'Miss Peach', 'Captain Brown', 'Lady Lavender'],
+            traps: new Map(),
+            supplyDecks: new Map()
+        };
+
+        // Initialize locations with traps
+        function initializeTraps() {
+            gameState.locations.forEach(location => {
+                gameState.traps.set(location, {
+                    value: Math.floor(Math.random() * 3) + 2, // 2-4
+                    suit: Math.random() < 0.5 ? 'triangle' : 'circle',
+                    disarmed: false
+                });
+            });
+        }
+
+        // Initialize players
+        function initializePlayers(count) {
+            gameState.players = [];
+            for (let i = 0; i < count; i++) {
+                gameState.players.push({
+                    id: i,
+                    name: `Player ${i + 1}`,
+                    character: gameState.characters[i],
+                    role: null,
+                    supplyCards: [],
+                    isScout: false,
+                    isBodyguard: false
+                });
+            }
+            
+            // Assign roles
+            assignRoles(count);
+            
+            // Deal supply cards
+            dealSupplyCards();
+        }
+
+        // Assign secret roles
+        function assignRoles(playerCount) {
+            const roleDistribution = {
+                4: { friends: 2, accomplices: 1 },
+                5: { friends: 3, accomplices: 1 },
+                6: { friends: 4, accomplices: 1 },
+                7: { friends: 4, accomplices: 2 },
+                8: { friends: 5, accomplices: 2 },
+                9: { friends: 5, accomplices: 3 },
+                10: { friends: 6, accomplices: 3 }
+            };
+
+            const dist = roleDistribution[playerCount];
+            const roles = [];
+            
+            for (let i = 0; i < dist.friends; i++) {
+                roles.push('friend');
+            }
+            for (let i = 0; i < dist.accomplices; i++) {
+                roles.push('accomplice');
+            }
+            roles.push('ringleader');
+
+            // Shuffle roles
+            for (let i = roles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [roles[i], roles[j]] = [roles[j], roles[i]];
+            }
+
+            // Assign to players
+            gameState.players.forEach((player, index) => {
+                player.role = roles[index];
+                if (player.role === 'ringleader') {
+                    gameState.ringleader = player.id;
+                }
+            });
+
+            // Set up plot
+            gameState.plotLocation = gameState.locations[Math.floor(Math.random() * gameState.locations.length)];
+            gameState.plotWeapon = gameState.weapons[Math.floor(Math.random() * gameState.weapons.length)];
+        }
+
+        // Deal supply cards
+        function dealSupplyCards() {
+            gameState.players.forEach(player => {
+                player.supplyCards = [];
+                for (let i = 0; i < 3; i++) {
+                    player.supplyCards.push(generateSupplyCard());
+                }
+            });
+        }
+
+        // Generate a supply card
+        function generateSupplyCard() {
+            const rand = Math.random();
+            if (rand < 0.4) {
+                return { value: 1, suit: null };
+            } else if (rand < 0.7) {
+                return { value: 2, suit: 'triangle' };
+            } else {
+                return { value: 2, suit: 'circle' };
+            }
+        }
+
+        // Start the game
+        function startGame() {
+            const playerCount = parseInt(document.getElementById('player-count').value);
+            initializeTraps();
+            initializePlayers(playerCount);
+            
+            gameState.phase = 'scout';
+            gameState.currentScout = 0;
+            gameState.players[0].isScout = true;
+            
+            updateUI();
+            log(`Game started with ${playerCount} players!`, 'success');
+            log(`${gameState.players[0].name} is the first Scout.`, 'important');
+            
+            if (gameState.ringleader !== null) {
+                log(`Secret plot: ${gameState.plotLocation} with ${gameState.plotWeapon}`, 'danger');
+            }
+        }
+
+        // Confirm scout selection
+        function confirmScoutSelection() {
+            const bodyguard = parseInt(document.getElementById('bodyguard-select').value);
+            const location = document.getElementById('location-select').value;
+            const teamCheckboxes = document.querySelectorAll('#team-selection input[type="checkbox"]:checked');
+            const team = Array.from(teamCheckboxes).map(cb => parseInt(cb.value));
+            
+            if (isNaN(bodyguard) || !location) {
+                alert('Please select a bodyguard and location!');
+                return;
+            }
+            
+            gameState.currentBodyguard = bodyguard;
+            gameState.currentLocation = location;
+            gameState.currentTeam = [gameState.currentScout, bodyguard, ...team];
+            
+            // Update player roles
+            gameState.players.forEach(player => {
+                player.isBodyguard = player.id === bodyguard;
+            });
+            
+            gameState.phase = 'voting';
+            gameState.currentPlayerIndex = 0;
+            gameState.votes = [];
+            
+            updateUI();
+            log(`Scout selected: Bodyguard=${gameState.players[bodyguard].name}, Location=${location}, Team=${gameState.currentTeam.map(id => gameState.players[id].name).join(', ')}`, 'important');
+        }
+
+        // Vote on the mission
+        function vote(approve) {
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            gameState.votes.push({ player: currentPlayer.id, vote: approve });
+            
+            log(`${currentPlayer.name} voted ${approve ? 'APPROVE' : 'REJECT'}`, approve ? 'success' : 'danger');
+            
+            gameState.currentPlayerIndex++;
+            
+            if (gameState.currentPlayerIndex >= gameState.players.length) {
+                // All votes cast, process results
+                processVotes();
+            } else {
+                updateUI();
+            }
+        }
+
+        // Process all votes
+        function processVotes() {
+            const approvals = gameState.votes.filter(v => v.vote).length;
+            const total = gameState.votes.length;
+            
+            if (approvals > total / 2) {
+                // Vote passed
+                log(`Vote PASSED (${approvals}/${total})`, 'success');
+                gameState.stormTracker = 0;
+                
+                // Check for plot activation
+                if (checkPlotActivation()) {
+                    return;
+                }
+                
+                // Move to disarm phase
+                gameState.phase = 'disarm';
+                gameState.currentPlayerIndex = 0;
+                gameState.selectedCards = [];
+                
+            } else {
+                // Vote failed
+                log(`Vote FAILED (${approvals}/${total})`, 'danger');
+                gameState.stormTracker++;
+                
+                if (gameState.stormTracker >= 3) {
+                    gameState.coralHealth--;
+                    gameState.stormTracker = 0;
+                    log('Storm damages Mr. Coral!', 'danger');
+                    
+                    if (gameState.coralHealth <= 0) {
+                        endGame('storm');
+                        return;
+                    }
+                }
+                
+                // Start new round
+                nextRound();
+            }
+            
+            updateUI();
+        }
+
+        // Check if plot is activated
+        function checkPlotActivation() {
+            const isActivated = 
+                gameState.coralHealth < 3 && 
+                gameState.currentLocation === gameState.plotLocation && 
+                gameState.currentBodyguard === gameState.ringleader;
+            
+            if (isActivated) {
+                endGame('plot');
+                return true;
+            }
+            return false;
+        }
+
+        // Submit cards for disarming
+        function submitDisarmCards() {
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            const selectedCards = Array.from(document.querySelectorAll('#disarm-cards .card.selected'));
+            
+            if (selectedCards.length === 0) {
+                alert('Please select at least one card!');
+                return;
+            }
+            
+            // Calculate contribution
+            const trap = gameState.traps.get(gameState.currentLocation);
+            let contribution = 0;
+            
+            selectedCards.forEach(cardEl => {
+                const cardIndex = parseInt(cardEl.dataset.index);
+                const card = currentPlayer.supplyCards[cardIndex];
+                
+                if (trap.suit === 'both' || card.suit === trap.suit || card.suit === null) {
+                    contribution += card.value;
+                }
+            });
+            
+            // Remove selected cards from player's hand
+            const cardIndices = selectedCards.map(el => parseInt(el.dataset.index)).sort((a, b) => b - a);
+            cardIndices.forEach(index => {
+                currentPlayer.supplyCards.splice(index, 1);
+            });
+            
+            log(`${currentPlayer.name} contributed ${contribution} points`, 'important');
+            
+            // Add to global contribution
+            if (!gameState.trapContribution) {
+                gameState.trapContribution = 0;
+            }
+            gameState.trapContribution += contribution;
+            
+            // Move to next player
+            gameState.currentPlayerIndex++;
+            
+            if (gameState.currentPlayerIndex >= gameState.currentTeam.length) {
+                // All team members have contributed
+                processTrapDisarm();
+            } else {
+                updateUI();
+            }
+        }
+
+        // Skip disarm turn
+        function skipDisarmTurn() {
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            log(`${currentPlayer.name} skipped their turn`, 'important');
+            
+            gameState.currentPlayerIndex++;
+            
+            if (gameState.currentPlayerIndex >= gameState.currentTeam.length) {
+                processTrapDisarm();
+            } else {
+                updateUI();
+            }
+        }
+
+        // Process trap disarming
+        function processTrapDisarm() {
+            const trap = gameState.traps.get(gameState.currentLocation);
+            const success = (gameState.trapContribution || 0) >= trap.value;
+            
+            if (success) {
+                trap.disarmed = true;
+                gameState.disarmedTraps.push(gameState.currentLocation);
+                log(`Trap at ${gameState.currentLocation} successfully disarmed!`, 'success');
+                
+                // Check win condition
+                if (gameState.disarmedTraps.length === gameState.locations.length) {
+                    endGame('friends');
+                    return;
+                }
+            } else {
+                gameState.coralHealth--;
+                log(`Trap at ${gameState.currentLocation} activated! Mr. Coral takes damage.`, 'danger');
+                
+                if (gameState.coralHealth <= 0) {
+                    endGame('traps');
+                    return;
+                }
+            }
+            
+            // Reset for next round
+            gameState.trapContribution = 0;
+            nextRound();
+            updateUI();
+        }
+
+        // Move to next round
+        function nextRound() {
+            gameState.round++;
+            gameState.phase = 'scout';
+            
+            // Clear current roles
+            gameState.players.forEach(player => {
+                player.isScout = false;
+                player.isBodyguard = false;
+            });
+            
+            // Next scout
+            gameState.currentScout = (gameState.currentScout + 1) % gameState.players.length;
+            gameState.players[gameState.currentScout].isScout = true;
+            
+            // Reset state
+            gameState.currentBodyguard = null;
+            gameState.currentTeam = [];
+            gameState.currentLocation = null;
+            gameState.votes = [];
+            
+            log(`Round ${gameState.round}: ${gameState.players[gameState.currentScout].name} is now Scout`, 'important');
+        }
+
+        // End the game
+        function endGame(reason) {
+            gameState.phase = 'game-over';
+            
+            let message = '';
+            switch (reason) {
+                case 'plot':
+                    message = '🎭 CONSPIRACY WINS! The plot was successfully executed.';
+                    break;
+                case 'friends':
+                    message = '👥 FRIENDS WIN! All traps have been disarmed.';
+                    break;
+                case 'traps':
+                    message = '⚰️ Mr. Coral has been killed by traps. Time for investigation...';
+                    break;
+                case 'storm':
+                    message = '🌪️ Mr. Coral has been killed by the storm. Time for investigation...';
+                    break;
+            }
+            
+            log(message, 'important');
+            updateUI();
+        }
+
+        // Reset the game
+        function resetGame() {
+            gameState.phase = 'setup';
+            gameState.round = 1;
+            gameState.players = [];
+            gameState.coralHealth = 3;
+            gameState.stormTracker = 0;
+            gameState.disarmedTraps = [];
+            gameState.traps.clear();
+            
+            document.getElementById('log-container').innerHTML = '<div class="log-entry">Game reset. Set up your players to begin!</div>';
+            updateUI();
+        }
+
+        // Update the UI
+        function updateUI() {
+            // Update header
+            document.getElementById('game-phase').textContent = gameState.phase;
+            document.getElementById('round-number').textContent = gameState.round;
+            document.getElementById('coral-health').textContent = '♥'.repeat(gameState.coralHealth) + '♡'.repeat(3 - gameState.coralHealth);
+            document.getElementById('storm-tracker').textContent = '🌩️'.repeat(gameState.stormTracker) + '☁️'.repeat(3 - gameState.stormTracker);
+            
+            // Update locations
+            updateLocations();
+            
+            // Update players
+            updatePlayers();
+            
+            // Update actions
+            updateActions();
+        }
+
+        // Update locations display
+        function updateLocations() {
+            const container = document.getElementById('locations-grid');
+            container.innerHTML = '';
+            
+            gameState.locations.forEach(location => {
+                const locationEl = document.createElement('div');
+                locationEl.className = 'location';
+                
+                if (location === gameState.currentLocation) {
+                    locationEl.classList.add('current');
+                }
+                
+                const trap = gameState.traps.get(location);
+                if (trap && trap.disarmed) {
+                    locationEl.classList.add('disarmed');
+                }
+                
+                locationEl.innerHTML = `
+                    <div class="location-name">${location}</div>
+                    <div class="trap-info">
+                        <span class="trap-strength">${trap ? trap.value : '?'}</span>
+                        <span class="trap-suit ${trap ? trap.suit : ''}">${trap ? (trap.suit === 'triangle' ? '▲' : '●') : '?'}</span>
+                    </div>
+                `;
+                
+                container.appendChild(locationEl);
+            });
+        }
+
+        // Update players display
+        function updatePlayers() {
+            const container = document.getElementById('players-list');
+            container.innerHTML = '';
+            
+            gameState.players.forEach((player, index) => {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'player-item';
+                
+                if (index === gameState.currentPlayerIndex) {
+                    playerEl.classList.add('current');
+                }
+                
+                let roleText = '';
+                if (player.isScout) roleText += '🎯 ';
+                if (player.isBodyguard) roleText += '🛡️ ';
+                
+                playerEl.innerHTML = `
+                    <div>
+                        <div class="player-name">${player.name}</div>
+                        <div class="player-character">${player.character}</div>
+                    </div>
+                    <div class="player-role">${roleText}${player.role}</div>
+                `;
+                
+                container.appendChild(playerEl);
+            });
+        }
+
+        // Update actions display
+        function updateActions() {
+            // Hide all sections
+            document.querySelectorAll('.action-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show appropriate section
+            const currentSection = document.getElementById(`${gameState.phase}-section`);
+            if (currentSection) {
+                currentSection.classList.add('active');
+            }
+            
+            // Update specific sections
+            switch (gameState.phase) {
+                case 'scout':
+                    updateScoutSection();
+                    break;
+                case 'voting':
+                    updateVotingSection();
+                    break;
+                case 'disarm':
+                    updateDisarmSection();
+                    break;
+                case 'game-over':
+                    updateGameOverSection();
+                    break;
+            }
+        }
+
+        // Update scout section
+        function updateScoutSection() {
+            const bodyguardSelect = document.getElementById('bodyguard-select');
+            const locationSelect = document.getElementById('location-select');
+            const teamSelection = document.getElementById('team-selection');
+            
+            // Populate bodyguard options
+            bodyguardSelect.innerHTML = '<option value="">Choose bodyguard...</option>';
+            gameState.players.forEach(player => {
+                if (player.id !== gameState.currentScout) {
+                    const option = document.createElement('option');
+                    option.value = player.id;
+                    option.textContent = `${player.name} (${player.character})`;
+                    bodyguardSelect.appendChild(option);
+                }
+            });
+            
+            // Populate location options
+            locationSelect.innerHTML = '<option value="">Choose location...</option>';
+            gameState.locations.forEach(location => {
+                if (!gameState.disarmedTraps.includes(location)) {
+                    const option = document.createElement('option');
+                    option.value = location;
+                    option.textContent = location;
+                    locationSelect.appendChild(option);
+                }
+            });
+            
+            // Populate team selection
+            teamSelection.innerHTML = '';
+            gameState.players.forEach(player => {
+                if (player.id !== gameState.currentScout) {
+                    const label = document.createElement('label');
+                    label.className = 'checkbox-item';
+                    label.innerHTML = `
+                        <input type="checkbox" value="${player.id}">
+                        ${player.name} (${player.character})
+                    `;
+                    teamSelection.appendChild(label);
+                }
+            });
+        }
+
+        // Update voting section
+        function updateVotingSection() {
+            const scoutPlayer = gameState.players.find(p => p.id === gameState.currentScout);
+            const bodyguardPlayer = gameState.players.find(p => p.id === gameState.currentBodyguard);
+            const teamNames = gameState.currentTeam.map(id => gameState.players.find(p => p.id === id).name).join(', ');
+            
+            document.getElementById('mission-scout').textContent = scoutPlayer.name;
+            document.getElementById('mission-bodyguard').textContent = bodyguardPlayer.name;
+            document.getElementById('mission-team').textContent = teamNames;
+            document.getElementById('mission-location').textContent = gameState.currentLocation;
+            document.getElementById('current-voter').textContent = gameState.players[gameState.currentPlayerIndex].name;
+        }
+
+        // Update disarm section
+        function updateDisarmSection() {
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            const trap = gameState.traps.get(gameState.currentLocation);
+            
+            document.getElementById('trap-location').textContent = gameState.currentLocation;
+            document.getElementById('trap-strength').textContent = trap.value;
+            document.getElementById('trap-type').textContent = trap.suit === 'triangle' ? 'Triangle (▲)' : 'Circle (●)';
+            document.getElementById('current-disarmer').textContent = currentPlayer.name;
+            
+            // Show player's cards
+            const cardsContainer = document.getElementById('disarm-cards');
+            cardsContainer.innerHTML = '';
+            
+            currentPlayer.supplyCards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = `card ${card.suit || 'neutral'}`;
+                cardEl.dataset.index = index;
+                cardEl.textContent = card.value;
+                
+                cardEl.addEventListener('click', () => {
+                    cardEl.classList.toggle('selected');
+                });
+                
+                cardsContainer.appendChild(cardEl);
+            });
+        }
+
+        // Update game over section
+        function updateGameOverSection() {
+            const resultContainer = document.getElementById('game-result');
+            // Result message already logged, just show restart option
+            resultContainer.innerHTML = '<h4>Game has ended. Check the log for details.</h4>';
+        }
+
+        // Add log entry
+        function log(message, type = 'normal') {
+            const container = document.getElementById('log-container');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[Round ${gameState.round}] ${message}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Initialize the game
+        initializeTraps();
+        updateUI();
+    </script>
+</body>
+</html> 

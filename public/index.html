@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clue Conspiracy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active">
+            <div class="login-container">
+                <h1>🕵️ Clue Conspiracy</h1>
+                <p>A Social Deduction Mystery Game</p>
+                <div class="login-form">
+                    <input type="text" id="player-name" placeholder="Enter your name" required>
+                    <input type="text" id="game-id" placeholder="Game ID (or leave blank for new game)">
+                    <button id="join-btn">Join Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <!-- Header -->
+            <div class="game-header">
+                <div class="game-info">
+                    <h2>🕵️ Clue Conspiracy</h2>
+                    <div class="game-status">
+                        <span id="game-phase">Lobby</span>
+                        <span id="round-info"></span>
+                    </div>
+                </div>
+                <div class="coral-status">
+                    <div class="coral-health">
+                        <span>Mr. Coral Health:</span>
+                        <div id="health-display">♥♥♥</div>
+                    </div>
+                    <div class="storm-tracker">
+                        <span>Storm:</span>
+                        <div id="storm-display">☁☁☁</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Game Area -->
+            <div class="game-main">
+                <!-- Resort Map -->
+                <div class="resort-map">
+                    <h3>Black Adder Resort</h3>
+                    <div class="locations-grid">
+                        <div class="location" data-location="Pool">
+                            <div class="location-name">Pool</div>
+                            <div class="trap-info">
+                                <span class="trap-value">?</span>
+                                <span class="trap-suit">?</span>
+                            </div>
+                        </div>
+                        <div class="location" data-location="Spa">
+                            <div class="location-name">Spa</div>
+                            <div class="trap-info">
+                                <span class="trap-value">?</span>
+                                <span class="trap-suit">?</span>
+                            </div>
+                        </div>
+                        <div class="location" data-location="Restaurant">
+                            <div class="location-name">Restaurant</div>
+                            <div class="trap-info">
+                                <span class="trap-value">?</span>
+                                <span class="trap-suit">?</span>
+                            </div>
+                        </div>
+                        <div class="location" data-location="Bar">
+                            <div class="location-name">Bar</div>
+                            <div class="trap-info">
+                                <span class="trap-value">?</span>
+                                <span class="trap-suit">?</span>
+                            </div>
+                        </div>
+                        <div class="location" data-location="Gym">
+                            <div class="location-name">Gym</div>
+                            <div class="trap-info">
+                                <span class="trap-value">?</span>
+                                <span class="trap-suit">?</span>
+                            </div>
+                        </div>
+                        <div class="location" data-location="Library">
+                            <div class="location-name">Library</div>
+                            <div class="trap-info">
+                                <span class="trap-value">?</span>
+                                <span class="trap-suit">?</span>
+                            </div>
+                        </div>
+                        <div class="location" data-location="Ballroom">
+                            <div class="location-name">Ballroom</div>
+                            <div class="trap-info">
+                                <span class="trap-value">?</span>
+                                <span class="trap-suit">?</span>
+                            </div>
+                        </div>
+                        <div class="location" data-location="Conservatory">
+                            <div class="location-name">Conservatory</div>
+                            <div class="trap-info">
+                                <span class="trap-value">?</span>
+                                <span class="trap-suit">?</span>
+                            </div>
+                        </div>
+                        <div class="location" data-location="Terrace">
+                            <div class="location-name">Terrace</div>
+                            <div class="trap-info">
+                                <span class="trap-value">?</span>
+                                <span class="trap-suit">?</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Player Info -->
+                <div class="player-info">
+                    <div class="my-character">
+                        <h3 id="my-character-name">Your Character</h3>
+                        <div class="secret-role" id="my-secret-role">
+                            <strong>Secret Role:</strong> <span id="role-display">Unknown</span>
+                        </div>
+                        <div id="plot-info" class="plot-info" style="display: none;">
+                            <h4>🎯 Your Secret Plot</h4>
+                            <p><strong>Location:</strong> <span id="plot-location">Unknown</span></p>
+                            <p><strong>Weapon:</strong> <span id="plot-weapon">Unknown</span></p>
+                        </div>
+                    </div>
+
+                    <div class="my-cards">
+                        <div class="supply-cards">
+                            <h4>Supply Cards</h4>
+                            <div id="supply-cards-display"></div>
+                        </div>
+                        <div class="clue-cards">
+                            <h4>Clue Cards</h4>
+                            <div id="clue-cards-display"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Players List -->
+            <div class="players-section">
+                <h3>Players</h3>
+                <div id="players-list"></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions-section">
+                <div id="lobby-actions" class="action-panel">
+                    <h3>Waiting for Players...</h3>
+                    <p>Need 4-10 players to start</p>
+                    <button id="start-game-btn" disabled>Start Game</button>
+                </div>
+
+                <div id="scout-actions" class="action-panel" style="display: none;">
+                    <h3>🎯 Scout: Choose Your Team</h3>
+                    <div class="selection-group">
+                        <label>Bodyguard:</label>
+                        <select id="bodyguard-select">
+                            <option value="">Select Bodyguard...</option>
+                        </select>
+                    </div>
+                    <div class="selection-group">
+                        <label>Team Members:</label>
+                        <div id="team-selection"></div>
+                    </div>
+                    <div class="selection-group">
+                        <label>Location:</label>
+                        <select id="location-select">
+                            <option value="">Select Location...</option>
+                        </select>
+                    </div>
+                    <button id="confirm-selection-btn">Confirm Selection</button>
+                </div>
+
+                <div id="voting-actions" class="action-panel" style="display: none;">
+                    <h3>🗳️ Vote on the Mission</h3>
+                    <div class="mission-details">
+                        <p><strong>Scout:</strong> <span id="vote-scout"></span></p>
+                        <p><strong>Bodyguard:</strong> <span id="vote-bodyguard"></span></p>
+                        <p><strong>Team:</strong> <span id="vote-team"></span></p>
+                        <p><strong>Location:</strong> <span id="vote-location"></span></p>
+                    </div>
+                    <div class="vote-buttons">
+                        <button id="vote-approve" class="approve-btn">✓ Approve</button>
+                        <button id="vote-reject" class="reject-btn">✗ Reject</button>
+                    </div>
+                    <div id="vote-status">
+                        <p>Votes: <span id="vote-count">0</span> / <span id="vote-total">0</span></p>
+                    </div>
+                </div>
+
+                <div id="disarm-actions" class="action-panel" style="display: none;">
+                    <h3>🔧 Disarm the Trap</h3>
+                    <div class="trap-details">
+                        <p><strong>Location:</strong> <span id="disarm-location"></span></p>
+                        <p><strong>Trap Strength:</strong> <span id="trap-strength"></span></p>
+                        <p><strong>Trap Type:</strong> <span id="trap-type"></span></p>
+                    </div>
+                    <div class="card-selection">
+                        <p>Select Supply Cards to Submit:</p>
+                        <div id="selectable-cards"></div>
+                        <button id="submit-cards-btn">Submit Cards</button>
+                    </div>
+                </div>
+
+                <div id="game-over-actions" class="action-panel" style="display: none;">
+                    <h3>🎊 Game Over!</h3>
+                    <div id="game-result"></div>
+                    <button id="new-game-btn">New Game</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
