@@ -15,12 +15,15 @@ body {
 /* Screen Management */
 .screen {
     display: none;
+    min-height: 100vh;
+    padding: 20px;
 }
 
 .screen.active {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Utility Classes */
@@ -29,33 +32,32 @@ body {
 }
 
 .btn {
-    padding: 12px 24px;
+    padding: 15px 30px;
     border: none;
-    border-radius: 8px;
-    font-size: 1rem;
+    border-radius: 10px;
+    font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    letter-spacing: 1px;
 }
 
 .btn:disabled {
-    background: #6c757d;
+    opacity: 0.5;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-    opacity: 0.6;
+    transform: none !important;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(45deg, #ff6b6b, #ee5a52);
     color: white;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
 }
 
 .btn-success {
@@ -75,69 +77,178 @@ body {
 
 /* Login Screen */
 .login-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 500px;
+    width: 100%;
     text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .login-container h1 {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
-    background: linear-gradient(45deg, #ffd700, #ffed4e);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .subtitle {
-    font-size: 1.5rem;
-    margin-bottom: 3rem;
+    font-size: 1.2rem;
+    margin-bottom: 30px;
     opacity: 0.9;
-    font-weight: 300;
 }
 
 .login-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    width: 100%;
-    max-width: 400px;
-    margin-bottom: 2rem;
+    gap: 20px;
 }
 
 .login-form input {
-    padding: 1rem 1.5rem;
+    padding: 15px;
     border: none;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    background: rgba(255,255,255,0.95);
+    border-radius: 10px;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.9);
     color: #333;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
 }
 
-.login-form input:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
-    background: rgba(255,255,255,1);
+.login-form input::placeholder {
+    color: #666;
 }
 
 .instructions {
-    background: rgba(255,255,255,0.1);
-    border-radius: 12px;
-    padding: 1.5rem;
-    backdrop-filter: blur(10px);
-    max-width: 500px;
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
     text-align: left;
+    font-size: 0.9rem;
 }
 
 .instructions p {
-    margin-bottom: 0.5rem;
+    margin-bottom: 10px;
+}
+
+/* Lobby Screen */
+.lobby-container {
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+.lobby-container h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.game-info {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.game-info h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.players-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.players-section h3 {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+}
+
+.players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.player-card {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.player-card:hover {
+    transform: translateY(-2px);
+}
+
+.player-card.me {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.player-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.player-character {
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+.lobby-actions {
+    text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .login-container,
+    .lobby-container {
+        margin: 10px;
+        padding: 20px;
+    }
+    
+    .login-container h1,
+    .lobby-container h1 {
+        font-size: 2rem;
+    }
+    
+    .players-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Loading Animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.loading {
+    animation: pulse 2s infinite;
+}
+
+/* Success/Error States */
+.success {
+    color: #4CAF50;
+}
+
+.error {
+    color: #f44336;
+}
+
+.warning {
+    color: #ff9800;
 }
 
 /* Game Header */

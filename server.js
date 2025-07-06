@@ -133,6 +133,28 @@ io.on('connection', (socket) => {
       }
     }
   });
+
+  socket.on('start_game', (data) => {
+    console.log('🎮 Starting game:', data);
+    
+    try {
+      const { gameId } = data;
+      const game = games.get(gameId);
+      
+      if (game && game.players.size >= 4) {
+        game.phase = 'setup';
+        
+        // Send updated game state to all players
+        io.to(gameId).emit('game_state', game.getPublicGameState());
+        
+        console.log(`✅ Game ${gameId} started with ${game.players.size} players`);
+      } else {
+        socket.emit('start_failed', { reason: 'Need at least 4 players' });
+      }
+    } catch (error) {
+      console.error('❌ Error starting game:', error);
+    }
+  });
 });
 
 // Start server
