@@ -355,7 +355,7 @@ class ClueConspiracyGame {
   }
 
   getPublicGameState() {
-    return {
+    const baseState = {
       id: this.id,
       phase: this.phase,
       playerCount: this.playerCount,
@@ -388,6 +388,14 @@ class ClueConspiracyGame {
       votes: this.votes.size > 0 ? Array.from(this.votes.entries()) : null,
       gameEnded: this.gameEnded,
       winner: this.winner
+    };
+    
+    return {
+      ...baseState,
+      currentActivity: this.currentActivity,
+      activityStatus: this.getActivityStatus(),
+      gameLog: this.gameLog || [],
+      notifications: [] // Will be populated per player
     };
   }
 
@@ -473,6 +481,12 @@ class ClueConspiracyGame {
     // Reset votes
     this.votes.clear();
     
+    this.setActivity(scoutId, 'team_proposed', {
+      bodyguard: this.players.get(bodyguardId)?.name,
+      location: locationName,
+      teamSize: this.proposedMission.teamMembers.length
+    });
+    
     this.phase = 'round_voting';
     console.log(`🗳️ Mission proposed: ${this.players.get(bodyguardId).name} as bodyguard to ${locationName}`);
     return true;
@@ -493,6 +507,8 @@ class ClueConspiracyGame {
     if (this.votes.size === this.playerCount) {
       this.resolveVote();
     }
+    
+    this.setActivity(playerId, 'vote_cast', { vote });
     
     return true;
   }
@@ -877,6 +893,110 @@ class ClueConspiracyGame {
         break;
       default:
         console.log(`🎮 Game ${this.id} ended: ${reason}`);
+    }
+  }
+
+  // Activity tracking
+  setActivity(playerId, action, details = {}) {
+    const player = this.players.get(playerId);
+    if (!player) return;
+    
+    this.currentActivity = {
+      playerId,
+      playerName: player.name,
+      action,
+      details,
+      timestamp: Date.now()
+    };
+    
+    // Add to game log
+    this.addToGameLog(action, player.name, details);
+  }
+
+  addToGameLog(action, playerName, details = {}) {
+    if (!this.gameLog) this.gameLog = [];
+    
+    const logEntry = {
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: Date.now(),
+      round: this.round,
+      action,
+      playerName,
+      details,
+      phase: this.phase
+    };
+    
+    this.gameLog.push(logEntry);
+    
+    // Keep only last 50 entries
+    if (this.gameLog.length > 50) {
+      this.gameLog = this.gameLog.slice(-50);
+    }
+  }
+
+  getActivityStatus() {
+    const waiting = [];
+    
+    switch (this.phase) {
+      case 'round_choose_team':
+        const scoutName = this.players.get(this.currentScout)?.name;
+        return {
+          primary: `Waiting for ${scoutName} to choose team and location`,
+          secondary: `${scoutName} is the Scout this round`,
+          active: [this.currentScout]
+        };
+        
+      case 'round_voting':
+        const voted = this.votes.size;
+        const remaining = this.playerCount - voted;
+        const notVoted = Array.from(this.players.keys()).filter(id => !this.votes.has(id));
+        
+        return {
+          primary: `Voting on mission (${voted}/${this.playerCount} voted)`,
+          secondary: `Waiting for ${remaining} more vote${remaining !== 1 ? 's' : ''}`,
+          active: notVoted
+        };
+        
+      case 'round_disarm_traps':
+        const contributed = this.supplyContributions.size;
+        const teamSize = this.proposedMission?.teamMembers.length || 0;
+        const notContributed = this.proposedMission?.teamMembers.filter(id => !this.supplyContributions.has(id)) || [];
+        
+        return {
+          primary: `Disarming trap at ${this.proposedMission?.location}`,
+          secondary: `Team members selecting supply cards (${contributed}/${teamSize} submitted)`,
+          active: notContributed
+        };
+        
+      case 'round_collect_clues':
+        const bodyguardName = this.players.get(this.currentBodyguard)?.name;
+        return {
+          primary: `${bodyguardName} collecting clues`,
+          secondary: `Bodyguard deciding what to tell the group`,
+          active: [this.currentBodyguard]
+        };
+        
+      case 'round_supply_distribution':
+        const scoutName2 = this.players.get(this.currentScout)?.name;
+        return {
+          primary: `${scoutName2} distributing supply cards`,
+          secondary: `Scout managing supply distribution`,
+          active: [this.currentScout]
+        };
+        
+      case 'final_accusation':
+        return {
+          primary: `Final Accusation Phase`,
+          secondary: `Discuss and vote on WHO, WHERE, and WHAT`,
+          active: Array.from(this.players.keys())
+        };
+        
+      default:
+        return {
+          primary: getPhaseDisplayName(this.phase),
+          secondary: '',
+          active: []
+        };
     }
   }
 }

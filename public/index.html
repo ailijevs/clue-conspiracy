@@ -83,6 +83,20 @@
                 </div>
             </div>
 
+            <!-- Add activity display -->
+            <div class="activity-display" id="current-activity">
+                <div class="activity-primary">Starting game...</div>
+                <div class="activity-secondary">Preparing roles and board</div>
+            </div>
+
+            <!-- Add waiting indicator (will be shown/hidden dynamically) -->
+            <div class="waiting-indicator" id="waiting-indicator">
+                <div class="waiting-content">
+                    <div class="waiting-spinner"></div>
+                    <div class="waiting-text">Waiting for players...</div>
+                </div>
+            </div>
+
             <!-- Main Content -->
             <div class="game-content">
                 <!-- Left Panel: Game Board -->
@@ -314,7 +328,8 @@
 
         <!-- Game Log -->
         <div id="game-log" class="game-log">
-            <!-- Log entries populated by JS -->
+            <h3>📋 Game Log</h3>
+            <!-- Log entries will be added here -->
         </div>
     </div>
 

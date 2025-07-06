@@ -6,6 +6,8 @@ let playerName;
 let gameState = null;
 let privateState = null;
 let selectedCards = [];
+let notifications = [];
+let activityUpdateInterval;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -86,6 +88,21 @@ function initializeSocket() {
 
     socket.on('disconnect', () => {
         console.log('Disconnected from server');
+    });
+
+    socket.on('activity_update', (activity) => {
+        console.log('Activity update:', activity);
+        updateActivityDisplay(activity);
+    });
+
+    socket.on('game_log_update', (logEntry) => {
+        console.log('Game log update:', logEntry);
+        addToGameLog(logEntry);
+    });
+
+    socket.on('notification', (notification) => {
+        console.log('Notification:', notification);
+        showNotification(notification);
     });
 }
 
@@ -338,6 +355,19 @@ function updateUI() {
     
     // Update form options
     updateFormOptions();
+    
+    // Update activity status
+    if (gameState.activityStatus) {
+        updateActivityDisplay(gameState.activityStatus);
+    }
+    
+    // Update game log
+    if (gameState.gameLog) {
+        updateGameLog(gameState.gameLog);
+    }
+    
+    // Update waiting indicators
+    updateWaitingIndicators();
 }
 
 function updateBasicInfo() {
@@ -722,44 +752,39 @@ function updateMissionConfirmButton() {
 }
 
 function showDisarmResult(result) {
-    let message = '';
-    if (result.success) {
-        message = `✅ Trap disarmed successfully!\n\nSubmitted: ${result.totalValue} points\nRequired: ${result.required} points`;
-    } else {
-        message = `❌ Trap disarming failed!\n\nSubmitted: ${result.totalValue} points\nRequired: ${result.required} points\n\nMr. Coral takes damage!`;
-    }
-    alert(message);
+    const type = result.success ? 'success' : 'error';
+    const message = result.success ? 'Trap disarmed successfully!' : 'Trap disarming failed!';
+    const details = `Submitted: ${result.totalValue} points, Required: ${result.required} points`;
+    
+    showGameNotification(type, message, details);
 }
 
 function showFinalAccusationResult(result) {
-    let message = '';
-    if (result.correct) {
-        message = `🎉 Correct accusation! Friends win!\n\nThe plot was:\n${result.actualWho} in the ${result.actualWhere} with the ${result.actualWhat}`;
-    } else {
-        message = `❌ Incorrect accusation! Conspiracy wins!\n\nThe actual plot was:\n${result.actualWho} in the ${result.actualWhere} with the ${result.actualWhat}`;
-    }
-    alert(message);
+    const type = result.correct ? 'success' : 'error';
+    const message = result.correct ? 'Correct accusation! Friends win!' : 'Incorrect accusation! Conspiracy wins!';
+    const details = `The plot was: ${result.actualWho} in the ${result.actualWhere} with the ${result.actualWhat}`;
+    
+    showGameNotification(type, message, details);
 }
 
 function showGameEnd(result) {
     let message = '';
     switch (result.reason) {
         case 'friends_traps':
-            message = '🎉 Friends win! All traps have been disarmed and Mr. Coral is safe!';
+            message = '🎉 Friends win! All traps disarmed!';
             break;
         case 'friends_accusation':
-            message = '🎉 Friends win! The conspiracy has been exposed with a correct accusation!';
+            message = '🎉 Friends win! Conspiracy exposed!';
             break;
         case 'conspiracy_plot':
-            message = '🕵️ Conspiracy wins! The plot has been successfully executed!';
+            message = '🕵️ Conspiracy wins! Plot executed!';
             break;
         case 'conspiracy_accusation':
-            message = '🕵️ Conspiracy wins! The friends failed to expose the plot!';
+            message = '🕵️ Conspiracy wins! Friends failed!';
             break;
-        default:
-            message = `Game ended: ${result.reason}`;
     }
-    alert(message);
+    
+    showGameNotification('info', message);
 }
 
 function showScreen(screenId) {
@@ -792,4 +817,170 @@ function getPhaseDisplayName(phase) {
 
 function capitalizeFirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// New notification system
+function showNotification(notification) {
+    const container = document.getElementById('notification-container') || createNotificationContainer();
+    
+    const notificationDiv = document.createElement('div');
+    notificationDiv.className = `notification notification-${notification.type}`;
+    notificationDiv.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-message">${notification.message}</div>
+            ${notification.details ? `<div class="notification-details">${notification.details}</div>` : ''}
+        </div>
+        <button class="notification-close" onclick="closeNotification('${notification.id}')">✕</button>
+    `;
+    
+    container.appendChild(notificationDiv);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        closeNotification(notification.id);
+    }, 5000);
+    
+    // Add to notifications array
+    notifications.push(notification);
+}
+
+function createNotificationContainer() {
+    const container = document.createElement('div');
+    container.id = 'notification-container';
+    container.className = 'notification-container';
+    document.body.appendChild(container);
+    return container;
+}
+
+function closeNotification(notificationId) {
+    const notification = document.querySelector(`[data-notification-id="${notificationId}"]`);
+    if (notification) {
+        notification.remove();
+    }
+    notifications = notifications.filter(n => n.id !== notificationId);
+}
+
+// Replace all alert() calls with proper notifications
+function showGameNotification(type, message, details = '') {
+    showNotification({
+        id: Math.random().toString(36).substr(2, 9),
+        type,
+        message,
+        details,
+        timestamp: Date.now()
+    });
+}
+
+// Update the UI functions to show better status
+function updateActivityDisplay(activity) {
+    const activityElement = document.getElementById('current-activity');
+    if (!activityElement) return;
+    
+    if (activity) {
+        activityElement.innerHTML = `
+            <div class="activity-primary">${activity.primary}</div>
+            <div class="activity-secondary">${activity.secondary}</div>
+        `;
+        
+        // Update player indicators
+        updatePlayerActivityIndicators(activity.active);
+    }
+}
+
+function updatePlayerActivityIndicators(activePlayerIds) {
+    document.querySelectorAll('.player-card').forEach(card => {
+        const playerId = card.dataset.playerId;
+        if (activePlayerIds.includes(playerId)) {
+            card.classList.add('active-player');
+        } else {
+            card.classList.remove('active-player');
+        }
+    });
+}
+
+// Enhanced game log
+function addToGameLog(logEntry) {
+    const gameLogContainer = document.getElementById('game-log');
+    if (!gameLogContainer) return;
+    
+    const logDiv = document.createElement('div');
+    logDiv.className = 'log-entry';
+    logDiv.innerHTML = `
+        <div class="log-timestamp">${formatTimestamp(logEntry.timestamp)}</div>
+        <div class="log-content">
+            <strong>Round ${logEntry.round}:</strong> ${formatLogMessage(logEntry)}
+        </div>
+    `;
+    
+    gameLogContainer.appendChild(logDiv);
+    
+    // Auto-scroll to bottom
+    gameLogContainer.scrollTop = gameLogContainer.scrollHeight;
+    
+    // Keep only last 20 visible entries
+    const entries = gameLogContainer.querySelectorAll('.log-entry');
+    if (entries.length > 20) {
+        entries[0].remove();
+    }
+}
+
+function formatLogMessage(logEntry) {
+    switch (logEntry.action) {
+        case 'team_proposed':
+            return `${logEntry.playerName} proposed mission to ${logEntry.details.location} with ${logEntry.details.bodyguard} as bodyguard`;
+        case 'vote_cast':
+            return `${logEntry.playerName} voted ${logEntry.details.vote}`;
+        case 'trap_disarmed':
+            return `Trap at ${logEntry.details.location} was disarmed successfully`;
+        case 'trap_failed':
+            return `Trap at ${logEntry.details.location} failed to disarm - Mr. Coral takes damage`;
+        case 'clues_collected':
+            return `${logEntry.playerName} collected clues at ${logEntry.details.location}`;
+        case 'plot_activated':
+            return `🎯 THE PLOT HAS BEEN ACTIVATED! Conspiracy wins!`;
+        case 'final_accusation':
+            return `Final accusation made: ${logEntry.details.who} in ${logEntry.details.where} with ${logEntry.details.what}`;
+        default:
+            return `${logEntry.playerName} - ${logEntry.action}`;
+    }
+}
+
+function formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// Update the UI functions to show better status
+function updateWaitingIndicators() {
+    const waitingElement = document.getElementById('waiting-indicator');
+    if (!waitingElement) return;
+    
+    if (gameState.activityStatus && gameState.activityStatus.active.length > 0) {
+        const waitingFor = gameState.activityStatus.active
+            .map(id => gameState.players.find(p => p.id === id)?.name)
+            .filter(name => name)
+            .join(', ');
+            
+        waitingElement.innerHTML = `
+            <div class="waiting-content">
+                <div class="waiting-spinner"></div>
+                <div class="waiting-text">Waiting for: ${waitingFor}</div>
+            </div>
+        `;
+        waitingElement.style.display = 'block';
+    } else {
+        waitingElement.style.display = 'none';
+    }
+}
+
+function updateGameLog(gameLogEntries) {
+    const gameLogContainer = document.getElementById('game-log');
+    if (!gameLogContainer) return;
+    
+    // Clear and rebuild (more efficient for full updates)
+    gameLogContainer.innerHTML = '';
+    
+    gameLogEntries.slice(-20).forEach(entry => {
+        addToGameLog(entry);
+    });
 } 
