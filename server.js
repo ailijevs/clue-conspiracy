@@ -355,7 +355,7 @@ class ClueConspiracyGame {
   }
 
   getPublicGameState() {
-    const baseState = {
+    return {
       id: this.id,
       phase: this.phase,
       playerCount: this.playerCount,
@@ -388,14 +388,6 @@ class ClueConspiracyGame {
       votes: this.votes.size > 0 ? Array.from(this.votes.entries()) : null,
       gameEnded: this.gameEnded,
       winner: this.winner
-    };
-    
-    return {
-      ...baseState,
-      currentActivity: this.currentActivity,
-      activityStatus: this.getActivityStatus(),
-      gameLog: this.gameLog || [],
-      notifications: [] // Will be populated per player
     };
   }
 
@@ -993,7 +985,7 @@ class ClueConspiracyGame {
         
       default:
         return {
-          primary: getPhaseDisplayName(this.phase),
+          primary: this.phase.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), // Simple phase name formatting
           secondary: '',
           active: []
         };
