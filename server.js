@@ -9,77 +9,38 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
+console.log('🚀 Starting ultra-simple server...');
+
 const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const path = require('path');
-
-console.log('🚀 Starting Clue Conspiracy server...');
-
 const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
 
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
-
-console.log('✅ Express and Socket.IO setup complete');
-
-// Simple in-memory game storage
-const games = new Map();
-
-// Basic route to test server is working
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// Health check endpoint
+app.get('/health', (req, res) => {
+  console.log('✅ Health check requested');
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// Test endpoint
 app.get('/test', (req, res) => {
-  res.json({ status: 'Server is working!', timestamp: new Date().toISOString() });
+  console.log('✅ Test endpoint requested');
+  res.send('Hello from Railway! Server is working!');
 });
 
-// Socket.IO connection handling
-io.on('connection', (socket) => {
-  console.log('🔌 Player connected:', socket.id);
-  
-  socket.on('join_game', (data) => {
-    console.log('🎮 Player joining game:', data);
-    
-    try {
-      const { gameId, playerName } = data;
-      
-      // Simple game joining logic
-      socket.join(gameId);
-      socket.emit('joined_game', { gameId, playerId: socket.id });
-      
-      // Send basic game state
-      socket.emit('game_state', {
-        id: gameId,
-        phase: 'lobby',
-        playerCount: 1,
-        players: [{ id: socket.id, name: playerName, character: 'Miss Scarlett' }]
-      });
-      
-      console.log(`✅ Player ${playerName} joined game ${gameId}`);
-    } catch (error) {
-      console.error('❌ Error in join_game:', error);
-      socket.emit('join_failed', { reason: 'Server error' });
-    }
-  });
-  
-  socket.on('disconnect', () => {
-    console.log('🔌 Player disconnected:', socket.id);
-  });
+// Main page
+app.get('/', (req, res) => {
+  console.log('✅ Root endpoint requested');
+  res.send('<h1>Clue Conspiracy Server</h1><p>Server is running!</p>');
 });
 
-// Start server
 const PORT = process.env.PORT || 3000;
 
-try {
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🕵️ Clue Conspiracy server running on port ${PORT}`);
-    console.log(`🌐 Server is ready to accept connections`);
-  });
-} catch (error) {
-  console.error('❌ Error starting server:', error);
-  process.exit(1);
-} 
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🌐 Server listening on port ${PORT}`);
+  console.log('✅ Server is ready');
+});
+
+// Keep the process alive
+process.on('SIGTERM', () => {
+  console.log('🛑 Received SIGTERM, shutting down gracefully');
+  process.exit(0);
+}); 
