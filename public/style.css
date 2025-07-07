@@ -1,1678 +1,954 @@
-/* Clean, Beautiful UI - No Glitches Version */
+/* BLACK ADDER RESORT - LUXURY DIGITAL EXPERIENCE */
 
-/* Import beautiful fonts */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+/* Premium Typography */
+@import url('https://fonts.googleapis.com/css2?family=Italiana&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* Resort Color Palette */
+/* Luxury Resort Palette */
 :root {
-  --resort-gold: #D4AF37;
-  --resort-coral: #FF6B6B;
-  --resort-teal: #4ECDC4;
-  --resort-navy: #2C3E50;
-  --resort-cream: #FFF8E7;
-  --resort-sand: #F5E6D3;
-  --resort-palm: #27AE60;
-  --resort-sky: #3498DB;
-  --resort-sunset: #E74C3C;
+  /* Primary Luxury Colors */
+  --gold: #D4B996;
+  --gold-light: #E8D7B9;
+  --gold-dark: #B8956F;
+  --deep-navy: #0B1426;
+  --charcoal: #1A1A1A;
+  --pearl: #F7F5F0;
+  --cream: #FDFCF7;
   
-  --white: #FFFFFF;
-  --black: #000000;
-  --gray-light: #F8F9FA;
-  --gray-medium: #6C757D;
-  --gray-dark: #343A40;
+  /* Accent Colors */
+  --coral-red: #C5534A;
+  --emerald: #2D6B3D;
+  --sapphire: #1B4B7F;
+  --amber: #E8A317;
   
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.2);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.3);
+  /* Luxury Gradients */
+  --gradient-gold: linear-gradient(135deg, #D4B996 0%, #B8956F 100%);
+  --gradient-navy: linear-gradient(135deg, #0B1426 0%, #1B2B4D 100%);
+  --gradient-pearl: linear-gradient(135deg, #FDFCF7 0%, #F7F5F0 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
   
-  --border-radius: 16px;
-  --border-radius-sm: 8px;
-  --border-radius-lg: 24px;
+  /* Luxury Shadows */
+  --shadow-luxury: 0 8px 32px rgba(11, 20, 38, 0.15);
+  --shadow-card: 0 4px 20px rgba(11, 20, 38, 0.12);
+  --shadow-floating: 0 16px 64px rgba(11, 20, 38, 0.2);
+  --shadow-inset: inset 0 2px 4px rgba(0,0,0,0.1);
   
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-2xl: 48px;
+  /* Spacing System */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  
+  /* Animations */
+  --ease-luxury: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-/* Reset and Base */
+/* Global Reset & Base */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: 
-    radial-gradient(circle at 30% 70%, rgba(72, 202, 228, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 70% 30%, rgba(78, 205, 196, 0.2) 0%, transparent 50%),
-    linear-gradient(135deg, 
-      #48CAE4 0%, 
-      #00B4D8 25%, 
-      #0077B6 50%, 
-      #023E8A 100%
-    );
-  color: var(--resort-navy);
-  min-height: 100vh;
-  overflow-x: hidden;
-  line-height: 1.6;
+html, body {
+  height: 100%;
   overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(212, 185, 150, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(197, 83, 74, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(27, 75, 127, 0.05) 0%, transparent 50%),
+    linear-gradient(135deg, 
+      var(--deep-navy) 0%, 
+      #152749 25%, 
+      #1B2B4D 50%, 
+      #0B1426 100%
+    );
+  color: var(--pearl);
+  line-height: 1.6;
+  font-weight: 400;
+  letter-spacing: 0.01em;
   position: fixed;
   width: 100%;
   height: 100%;
 }
 
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Playfair Display', serif;
-  font-weight: 600;
-  line-height: 1.2;
-  margin-bottom: var(--spacing-md);
+/* Luxury Typography System */
+.title-luxury {
+  font-family: 'Italiana', serif;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  margin-bottom: var(--space-lg);
 }
 
-h1 { font-size: 3.5rem; font-weight: 700; }
-h2 { font-size: 2.5rem; }
-h3 { font-size: 1.8rem; }
-h4 { font-size: 1.4rem; }
+.subtitle-luxury {
+  font-family: 'Crimson Text', serif;
+  font-size: 1.25rem;
+  font-style: italic;
+  color: var(--gold-light);
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+  opacity: 0.9;
+}
 
-/* Utility Classes */
-.hidden { display: none !important; }
-.text-center { text-align: center; }
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Crimson Text', serif;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: var(--space-md);
+}
 
-/* Screen Management */
+h1 { font-size: 2.5rem; color: var(--gold); }
+h2 { font-size: 2rem; color: var(--gold-light); }
+h3 { font-size: 1.5rem; color: var(--pearl); }
+h4 { font-size: 1.25rem; color: var(--pearl); }
+
+/* Screen Management - Cinematic Transitions */
 .screen {
-  display: none !important;
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
   width: 100vw;
   height: 100vh;
-  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.6s var(--ease-luxury);
   z-index: 100;
 }
 
 .screen.active {
-  display: flex !important;
-  flex-direction: column;
-}
-
-/* LOGIN SCREEN - FULL VIEWPORT */
-#login-screen {
-  background: 
-    radial-gradient(circle at 30% 70%, rgba(72, 202, 228, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 70% 30%, rgba(78, 205, 196, 0.2) 0%, transparent 50%),
-    linear-gradient(135deg, 
-      #48CAE4 0%, 
-      #00B4D8 25%, 
-      #0077B6 50%, 
-      #023E8A 100%
-    );
-  padding: var(--spacing-2xl);
-  justify-content: center;
-  align-items: center;
-}
-
-/* LOBBY SCREEN - FULL VIEWPORT */
-#lobby-screen {
-  background: 
-    radial-gradient(circle at 30% 70%, rgba(72, 202, 228, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 70% 30%, rgba(78, 205, 196, 0.2) 0%, transparent 50%),
-    linear-gradient(135deg, 
-      #48CAE4 0%, 
-      #00B4D8 25%, 
-      #0077B6 50%, 
-      #023E8A 100%
-    );
-  padding: var(--spacing-2xl);
-}
-
-/* GAME SCREEN - FULL VIEWPORT */
-#game-screen {
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(78, 205, 196, 0.1) 0%, transparent 50%),
-    linear-gradient(135deg, 
-      #48CAE4 0%, 
-      #00B4D8 25%, 
-      #0077B6 50%, 
-      #023E8A 100%
-    );
-  padding: 0;
-  overflow-y: auto;
-}
-
-/* Beautiful Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-md) var(--spacing-xl);
-  border: none;
-  border-radius: var(--border-radius);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: var(--shadow-md);
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--resort-coral), var(--resort-sunset));
-  color: var(--white);
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.btn-success {
-  background: linear-gradient(135deg, var(--resort-teal), var(--resort-palm));
-  color: var(--white);
-}
-
-.btn-success:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.btn-danger {
-  background: linear-gradient(135deg, var(--resort-sunset), #C0392B);
-  color: var(--white);
-}
-
-.btn-danger:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.btn-warning {
-  background: linear-gradient(135deg, var(--resort-gold), #F39C12);
-  color: var(--white);
-}
-
-.btn-warning:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.btn-disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: var(--gray-medium) !important;
-}
-
-.btn:disabled,
-.btn.btn-disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: var(--shadow-sm);
-}
-
-.btn:disabled:hover,
-.btn.btn-disabled:hover {
-  transform: none;
-  box-shadow: var(--shadow-sm);
-}
-
-/* Login Screen */
-.login-container {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-2xl);
-  max-width: 500px;
-  width: 100%;
-  margin: auto;
-  box-shadow: var(--shadow-xl);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.login-container h1 {
-  color: var(--resort-navy);
-  text-align: center;
-  margin-bottom: var(--spacing-sm);
-  background: linear-gradient(135deg, var(--resort-coral), var(--resort-gold));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.subtitle {
-  text-align: center;
-  color: var(--gray-medium);
-  margin-bottom: var(--spacing-xl);
-  font-size: 1.1rem;
-}
-
-.login-form {
+  opacity: 1;
+  visibility: visible;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
 }
 
-.login-form input {
-  padding: var(--spacing-md) var(--spacing-lg);
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  border-radius: var(--border-radius);
-  font-size: 1rem;
-  background: var(--white);
-  color: var(--resort-navy);
-  transition: all 0.3s ease;
+/* LOGIN SCREEN - Hotel Lobby Experience */
+#login-screen {
+  background: 
+    radial-gradient(circle at center, rgba(212, 185, 150, 0.1) 0%, transparent 70%),
+    var(--gradient-navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xl);
 }
 
-.login-form input:focus {
-  outline: none;
-  border-color: var(--resort-coral);
-  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
-}
-
-.login-form input::placeholder {
-  color: var(--gray-medium);
-}
-
-.instructions {
-  margin-top: var(--spacing-xl);
-  padding: var(--spacing-lg);
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: var(--border-radius);
-  border-left: 4px solid var(--resort-gold);
-}
-
-.instructions p {
-  margin-bottom: var(--spacing-sm);
-  color: var(--gray-dark);
-}
-
-.instructions strong {
-  color: var(--resort-navy);
-}
-
-/* Lobby Screen */
-.lobby-container {
-  max-width: 1000px;
+.login-container {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 185, 150, 0.2);
+  border-radius: var(--radius-xl);
+  padding: var(--space-3xl);
+  max-width: 500px;
   width: 100%;
-  margin: 0 auto;
-}
-
-.lobby-container h1 {
+  box-shadow: var(--shadow-floating);
   text-align: center;
-  color: var(--white);
-  margin-bottom: var(--spacing-lg);
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-.game-info {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-xl);
-  margin-bottom: var(--spacing-xl);
-  text-align: center;
-  box-shadow: var(--shadow-lg);
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--gradient-gold);
+  opacity: 0.3;
 }
 
-.game-info h2 {
-  color: var(--resort-navy);
-  margin-bottom: var(--spacing-sm);
+.resort-logo {
+  margin-bottom: var(--space-2xl);
 }
 
-.game-info p {
-  color: var(--gray-medium);
+.resort-logo .logo-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-md);
+  display: block;
+}
+
+/* Luxury Input System */
+.input-luxury {
+  position: relative;
+  margin-bottom: var(--space-xl);
+}
+
+.input-luxury input {
+  width: 100%;
+  padding: var(--space-lg) var(--space-xl);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(212, 185, 150, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--pearl);
   font-size: 1.1rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  transition: all 0.3s var(--ease-luxury);
+  backdrop-filter: blur(10px);
 }
 
-.players-section {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-xl);
-  margin-bottom: var(--spacing-xl);
-  box-shadow: var(--shadow-lg);
+.input-luxury input:focus {
+  outline: none;
+  border-color: var(--gold);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(212, 185, 150, 0.1);
+  transform: translateY(-1px);
 }
 
-.players-section h3 {
-  color: var(--resort-navy);
-  text-align: center;
-  margin-bottom: var(--spacing-lg);
-}
-
-.players-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-xl);
-}
-
-.player-card {
-  background: linear-gradient(135deg, var(--white), var(--gray-light));
-  border-radius: var(--border-radius);
-  padding: var(--spacing-lg);
-  text-align: center;
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-sm);
-  border: 2px solid transparent;
-}
-
-.player-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.player-card.me {
-  background: linear-gradient(135deg, var(--resort-teal), var(--resort-sky));
-  color: var(--white);
-  border-color: var(--resort-gold);
-}
-
-.player-name {
-  font-weight: 600;
-  font-size: 1.2rem;
-  margin-bottom: var(--spacing-sm);
-}
-
-.player-character {
-  opacity: 0.8;
-  font-size: 0.9rem;
+.input-luxury input::placeholder {
+  color: rgba(247, 245, 240, 0.5);
   font-style: italic;
 }
 
-.lobby-actions {
-  text-align: center;
+/* Premium Button System */
+.btn-luxury {
+  background: var(--gradient-gold);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--deep-navy);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: var(--space-lg) var(--space-2xl);
+  cursor: pointer;
+  transition: all 0.3s var(--ease-luxury);
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+  min-width: 140px;
 }
 
-/* Game Screen */
+.btn-luxury:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-floating);
+}
+
+.btn-luxury:active {
+  transform: translateY(0);
+}
+
+.btn-luxury:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-luxury::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-luxury:hover::before {
+  left: 100%;
+}
+
+/* Variants */
+.btn-emerald {
+  background: linear-gradient(135deg, var(--emerald), #34A853);
+  color: var(--cream);
+}
+
+.btn-coral {
+  background: linear-gradient(135deg, var(--coral-red), #E53E3E);
+  color: var(--cream);
+}
+
+.btn-sapphire {
+  background: linear-gradient(135deg, var(--sapphire), #3182CE);
+  color: var(--cream);
+}
+
+/* GAME SCREEN - Resort Control Center */
 #game-screen {
-  padding: 0 !important;
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(78, 205, 196, 0.1) 0%, transparent 50%),
-    linear-gradient(135deg, 
-      #48CAE4 0%, 
-      #00B4D8 25%, 
-      #0077B6 50%, 
-      #023E8A 100%
-    ) !important;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  background: var(--gradient-navy);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+  overflow: hidden;
 }
 
-/* Game Header */
+/* Luxury Header */
 .game-header {
-  background: rgba(255, 255, 255, 0.95) !important;
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
-  padding: var(--spacing-lg) var(--spacing-2xl);
-  box-shadow: var(--shadow-md);
+  border-bottom: 1px solid rgba(212, 185, 150, 0.15);
+  padding: var(--space-lg) var(--space-2xl);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  border-bottom: 2px solid var(--resort-gold);
+  position: relative;
 }
 
-.game-header .game-info {
+.game-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 1px;
+  background: var(--gradient-gold);
+  opacity: 0.3;
+}
+
+.game-title {
+  font-family: 'Italiana', serif;
+  font-size: 1.8rem;
+  color: var(--gold);
+  margin: 0;
+}
+
+.game-subtitle {
+  font-size: 0.9rem;
+  color: var(--gold-light);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.status-bar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0;
-  padding: 0;
-  background: none;
-  backdrop-filter: none;
-  box-shadow: none;
-}
-
-.game-header h1 {
-  font-size: 2.2rem !important;
-  margin-bottom: 0;
-  background: linear-gradient(135deg, var(--resort-coral), var(--resort-gold));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.game-status {
-  display: flex;
-  gap: var(--spacing-lg);
+  gap: var(--space-xl);
   align-items: center;
 }
 
 .status-item {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(212, 185, 150, 0.1);
 }
 
-.status-item .label {
-  font-size: 0.8rem;
-  color: var(--gray-medium);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: var(--spacing-xs);
-}
-
-.status-item .value {
-  font-weight: 600;
-  color: var(--resort-navy);
+.status-icon {
   font-size: 1.1rem;
 }
 
-.game-id {
-  font-family: 'Courier New', monospace;
-  background: var(--resort-gold);
-  color: var(--white);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  font-weight: 700;
-}
-
-.health-section {
-  display: flex;
-  gap: var(--spacing-xl);
-  align-items: center;
-}
-
-.health-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.health-item .label {
-  font-size: 0.8rem;
-  color: var(--gray-medium);
-  text-transform: uppercase;
-  margin-bottom: var(--spacing-xs);
-}
-
-.health-hearts {
-  font-size: 1.5rem;
-  color: var(--resort-sunset);
-}
-
-.storm-clouds {
-  font-size: 1.5rem;
-  color: var(--gray-medium);
-}
-
-/* Activity Display */
-.activity-display {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: var(--border-radius);
-  padding: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
-  text-align: center;
-  box-shadow: var(--shadow-md);
-}
-
-.activity-primary {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: var(--resort-navy);
-  margin-bottom: var(--spacing-sm);
-}
-
-.activity-secondary {
-  color: var(--gray-medium);
-  font-size: 1rem;
-}
-
-/* NEW LAYOUT - INFO TOP, BOARD FULL WIDTH BELOW */
-.game-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xl);
-  padding: var(--spacing-xl);
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-/* PLAYER INFO BAR ACROSS THE TOP */
-.top-info-bar {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: var(--spacing-xl);
-  margin-bottom: var(--spacing-xl);
-}
-
-.player-info-card, .cards-section {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-xl);
-  box-shadow: var(--shadow-md);
-}
-
-/* FULL WIDTH BOARD */
-.game-board {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-2xl);
-  box-shadow: var(--shadow-lg);
-  margin: 0 var(--spacing-2xl); /* Padding on left and right */
-}
-
-.resort-board-container {
-  position: relative;
-  width: 100%;
-  height: 800px; /* Much taller */
-  margin: 0 auto;
-  border-radius: var(--border-radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-}
-
-.resort-board {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background: 
-    radial-gradient(circle at center, rgba(255, 248, 231, 0.9) 0%, rgba(245, 230, 211, 0.8) 100%),
-    linear-gradient(45deg, #FFF8E7 0%, #F5E6D3 50%, #E6D7C3 100%);
-  border-radius: var(--border-radius-lg);
-  border: 6px solid var(--resort-gold);
-  box-shadow: 
-    inset 0 0 60px rgba(212, 175, 55, 0.2),
-    0 12px 40px rgba(0, 0, 0, 0.3),
-    0 0 0 3px rgba(212, 175, 55, 0.5);
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr; /* 5 columns for even better spacing */
-  grid-template-rows: 1fr 1fr 1fr 1fr; /* 4 rows instead of 3 for more height */
-  gap: var(--spacing-2xl); /* Bigger gaps */
-  padding: var(--spacing-3xl);
-}
-
-/* ADJUST LOCATION CARD POSITIONS FOR 4-COLUMN GRID */
-.location-card.top-left { grid-area: 1 / 1 / 2 / 2; }
-.location-card.top-center { grid-area: 1 / 3 / 2 / 4; } /* Single column in center */
-.location-card.top-right { grid-area: 1 / 5 / 2 / 6; }
-.location-card.left-top { grid-area: 2 / 1 / 3 / 2; }
-.location-card.right-top { grid-area: 2 / 5 / 3 / 6; }
-.location-card.bottom-left { grid-area: 4 / 1 / 5 / 2; }
-.location-card.bottom-center { grid-area: 4 / 3 / 5 / 4; }
-.location-card.bottom-right { grid-area: 4 / 5 / 5 / 6; }
-
-/* CENTER AREA SPANS MIDDLE COLUMNS */
-.central-area {
-  grid-area: 2 / 2 / 4 / 5; /* Spans more area - from row 2 to 4, columns 2 to 5 */
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-2xl);
-  box-shadow: var(--shadow-md);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 4px solid var(--resort-gold);
-}
-
-/* BETTER LOGO SIZING */
-.logo-text {
-  font-family: 'Playfair Display', serif;
-  font-size: 2rem; /* Much bigger */
-  font-weight: 700;
-  color: var(--resort-navy);
-  margin-bottom: var(--spacing-sm);
-}
-
-.logo-subtext {
-  font-size: 1rem; /* Bigger */
-  color: var(--gray-medium);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: var(--spacing-xl);
-}
-
-/* CLEANER SUPPLY AREAS */
-.supply-areas {
-  display: flex;
-  gap: var(--spacing-sm);
-  font-size: 0.65rem;
-  width: 100%;
-  justify-content: space-between;
-}
-
-.supply-deck, .discard-pile {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: var(--border-radius-sm);
-  padding: var(--spacing-sm);
-  text-align: center;
-  flex: 1;
-  min-height: 30px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.supply-label, .discard-label {
-  font-weight: 700;
-  color: var(--resort-navy);
-  font-size: 0.65rem;
-  margin-bottom: var(--spacing-xs);
-}
-
-.supply-sublabel {
-  font-size: 0.55rem;
-  color: var(--gray-medium);
-  line-height: 1.1;
-}
-
-/* BETTER MR. CORAL POSITIONING */
-.coral-position {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background: rgba(255, 107, 107, 0.9);
-  border-radius: var(--border-radius-sm);
-  padding: var(--spacing-sm);
-  text-align: center;
-  backdrop-filter: blur(10px);
-  border: 2px solid var(--resort-coral);
-  box-shadow: var(--shadow-sm);
-  z-index: 10;
-}
-
-.coral-avatar {
-  font-size: 1.5rem;
-  margin-bottom: var(--spacing-xs);
-}
-
-.coral-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--white);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Board Trackers */
-.board-trackers {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-xl);
-}
-
-.tracker {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: var(--border-radius);
-  padding: var(--spacing-lg);
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-  border: 2px solid transparent;
-  transition: all 0.3s ease;
-}
-
-.tracker.storm-tracker {
-  border-color: var(--gray-medium);
-}
-
-.tracker.health-tracker {
-  border-color: var(--resort-sunset);
-}
-
-.tracker-label {
+.status-text {
   font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--resort-navy);
-  margin-bottom: var(--spacing-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.tracker-label-sub {
-  font-size: 0.7rem;
-  color: var(--gray-medium);
-  margin-bottom: var(--spacing-xs);
-}
-
-.tracker-label-danger {
-  font-size: 0.8rem;
-  color: var(--resort-sunset);
-  font-weight: 700;
-  margin-bottom: var(--spacing-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.tracker-circles {
-  display: flex;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-sm);
-}
-
-.tracker-circle {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.tracker-circle.active {
-  background: var(--resort-coral);
-  color: var(--white);
-  box-shadow: 0 0 15px rgba(255, 107, 107, 0.4);
-  border-color: var(--resort-sunset);
-}
-
-.health-circle {
-  background: rgba(231, 76, 60, 0.1);
-  color: var(--resort-sunset);
-  border-color: var(--resort-sunset);
-}
-
-.health-circle.active {
-  background: var(--resort-sunset);
-  color: var(--white);
-  box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
-}
-
-.health-circle.lost {
-  background: rgba(0, 0, 0, 0.1);
-  color: var(--gray-medium);
-  border-color: var(--gray-medium);
-}
-
-/* Right Panel */
-.right-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.player-info-card h3, .cards-section h4 {
-  color: var(--resort-navy);
-  margin-bottom: var(--spacing-lg);
-  border-bottom: 2px solid var(--resort-gold);
-  padding-bottom: var(--spacing-sm);
-}
-
-.character-info {
-  text-align: center;
-  margin-bottom: var(--spacing-lg);
-}
-
-.character-name {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--resort-navy);
-  margin-bottom: var(--spacing-sm);
-}
-
-.secret-role {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--border-radius);
-  background: var(--gray-light);
-  display: inline-block;
-}
-
-.role-label {
-  font-size: 0.8rem;
-  color: var(--gray-medium);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.role-value {
-  font-weight: 600;
-  color: var(--resort-navy);
-  margin-left: var(--spacing-sm);
-}
-
-.role-value.conspiracy {
-  color: var(--resort-sunset);
-}
-
-.plot-info {
-  margin-top: var(--spacing-lg);
-  padding: var(--spacing-lg);
-  background: linear-gradient(135deg, var(--resort-sunset), #C0392B);
-  border-radius: var(--border-radius);
-  color: var(--white);
-}
-
-.plot-info h4 {
-  color: var(--white);
-  margin-bottom: var(--spacing-md);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.plot-details div {
-  margin-bottom: var(--spacing-sm);
+  color: var(--pearl);
   font-weight: 500;
 }
 
-/* Simple Cards */
-.cards-container {
+/* Main Game Layout */
+.game-content {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  height: calc(100vh - 80px);
+  overflow: hidden;
+}
+
+/* Game Board - Luxury Resort Layout */
+.game-board {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 185, 150, 0.1);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.resort-board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: var(--space-md);
+  height: 100%;
+  position: relative;
+}
+
+/* Location Cards - Premium Hotel Rooms */
+.location-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(212, 185, 150, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-md);
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-luxury);
+  position: relative;
+  overflow: hidden;
+}
+
+.location-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gradient-gold);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease-luxury);
+}
+
+.location-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card);
+  border-color: var(--gold);
+}
+
+.location-card:hover::before {
+  opacity: 1;
+}
+
+.location-card.current {
+  background: rgba(212, 185, 150, 0.15);
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(212, 185, 150, 0.3);
+}
+
+.location-card.current::before {
+  opacity: 1;
+}
+
+.location-image {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-md);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.location-name {
+  font-family: 'Crimson Text', serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gold-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-sm);
+}
+
+.trap-display {
+  font-size: 0.8rem;
+  color: var(--pearl);
+  opacity: 0.8;
+}
+
+/* Central Resort Logo */
+.central-area {
+  grid-column: 2 / 5;
+  grid-row: 2 / 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(212, 185, 150, 0.1) 0%, transparent 70%);
+  border-radius: var(--radius-lg);
+  border: 2px solid rgba(212, 185, 150, 0.2);
+  position: relative;
+}
+
+.resort-logo-main {
+  text-align: center;
+  margin-bottom: var(--space-xl);
+}
+
+.logo-text {
+  font-family: 'Italiana', serif;
+  font-size: 3rem;
+  color: var(--gold);
+  margin-bottom: var(--space-sm);
+}
+
+.logo-subtext {
+  font-family: 'Crimson Text', serif;
+  font-size: 1rem;
+  color: var(--gold-light);
+  font-style: italic;
+  opacity: 0.8;
+  letter-spacing: 0.1em;
+}
+
+/* Right Panel - Concierge Interface */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  overflow-y: auto;
+  padding-right: var(--space-sm);
+}
+
+/* Player Info - VIP Card */
+.player-info-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 185, 150, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  position: relative;
+}
+
+.player-info-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--gradient-gold);
+  opacity: 0.4;
+}
+
+.character-name {
+  font-family: 'Crimson Text', serif;
+  font-size: 1.5rem;
+  color: var(--gold);
+  margin-bottom: var(--space-md);
+  text-align: center;
+}
+
+.secret-role {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 185, 150, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  text-align: center;
+  margin-bottom: var(--space-lg);
+}
+
+.role-value.conspiracy {
+  color: var(--coral-red);
+  font-weight: 600;
+}
+
+/* Cards - Premium Playing Cards */
+.cards-section {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(212, 185, 150, 0.15);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-md);
 }
 
 .card {
-  width: 80px;
-  height: 100px;
-  border-radius: var(--border-radius-sm);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(212, 185, 150, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-luxury);
+  position: relative;
+  min-height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-sm);
-  border: 2px solid transparent;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: var(--shadow-card);
+  border-color: var(--gold);
 }
 
 .card.selected {
-  border-color: var(--resort-gold);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.3);
+  background: rgba(212, 185, 150, 0.2);
+  border-color: var(--gold);
+  box-shadow: 0 0 15px rgba(212, 185, 150, 0.4);
+  transform: translateY(-3px) scale(1.05);
 }
 
-.card.supply {
-  background: linear-gradient(135deg, var(--white), var(--gray-light));
-  color: var(--resort-navy);
+.card.supply[data-suit="Triangle"] {
+  border-left: 3px solid var(--coral-red);
 }
 
-.card.supply[data-suit="Hearts"] {
-  background: linear-gradient(135deg, var(--resort-sunset), #C0392B);
-  color: var(--white);
+.card.supply[data-suit="Circle"] {
+  border-left: 3px solid var(--sapphire);
 }
 
-.card.supply[data-suit="Diamonds"] {
-  background: linear-gradient(135deg, var(--resort-gold), #F39C12);
-  color: var(--white);
-}
-
-.card.supply[data-suit="Clubs"] {
-  background: linear-gradient(135deg, var(--resort-navy), #1A252F);
-  color: var(--white);
-}
-
-.card.supply[data-suit="Spades"] {
-  background: linear-gradient(135deg, var(--gray-dark), var(--black));
-  color: var(--white);
-}
-
-.card.clue {
-  background: linear-gradient(135deg, var(--resort-teal), var(--resort-sky));
-  color: var(--white);
-  font-size: 0.9rem;
-  padding: var(--spacing-sm);
-  text-align: center;
-  line-height: 1.2;
-}
-
-/* Action Panels - CLEAN AND FUNCTIONAL */
+/* Action Panels - Luxury Interface */
 .action-panels {
-  margin-top: var(--spacing-xl);
+  margin-top: var(--space-lg);
 }
 
 .action-panel {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(20px);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-xl);
-  margin-bottom: var(--spacing-lg);
-  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(212, 185, 150, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-lg);
   display: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gradient-gold);
+  opacity: 0.5;
 }
 
 .action-header {
   text-align: center;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--space-xl);
+  border-bottom: 1px solid rgba(212, 185, 150, 0.1);
+  padding-bottom: var(--space-lg);
 }
 
 .action-header h3 {
-  color: var(--resort-navy);
-  margin-bottom: var(--spacing-md);
+  color: var(--gold);
+  margin-bottom: var(--space-md);
 }
 
 .action-header p {
-  color: var(--gray-medium);
-  font-size: 1.1rem;
-}
-
-/* Form Elements - CLEAN */
-.form-group {
-  margin-bottom: var(--spacing-lg);
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: var(--spacing-sm);
-  font-weight: 500;
-  color: var(--resort-navy);
-}
-
-.form-control {
-  width: 100%;
-  padding: var(--spacing-md);
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  border-radius: var(--border-radius);
+  color: var(--pearl);
+  opacity: 0.8;
   font-size: 1rem;
-  background: var(--white);
-  transition: all 0.3s ease;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: var(--resort-coral);
-  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
-}
-
-/* Team Selection */
-.team-selection {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-md);
-}
-
-.team-member {
-  display: flex;
-  align-items: center;
-  padding: var(--spacing-md);
-  background: var(--gray-light);
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.team-member:hover {
-  background: var(--resort-cream);
-  border-color: var(--resort-gold);
-}
-
-.team-member input[type="checkbox"] {
-  margin-right: var(--spacing-md);
-}
-
-/* Waiting Indicator */
-.waiting-indicator {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(10px);
-}
-
-.waiting-content {
-  background: var(--white);
-  padding: var(--spacing-2xl);
-  border-radius: var(--border-radius-lg);
-  text-align: center;
-  box-shadow: var(--shadow-xl);
-}
-
-.waiting-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid var(--gray-light);
-  border-top: 4px solid var(--resort-coral);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto var(--spacing-md);
-}
-
-.waiting-text {
-  font-size: 1.1rem;
-  color: var(--resort-navy);
-  font-weight: 500;
-}
-
-/* Simple animations only */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Game Log */
-.game-log {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-xl);
-  margin-top: var(--spacing-xl);
-  box-shadow: var(--shadow-md);
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.game-log h3 {
-  color: var(--resort-navy);
-  margin-bottom: var(--spacing-lg);
-  border-bottom: 2px solid var(--resort-gold);
-  padding-bottom: var(--spacing-sm);
-}
-
-.log-entry {
-  padding: var(--spacing-sm) var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  background: var(--gray-light);
-  font-size: 0.9rem;
-  line-height: 1.4;
-  border-left: 4px solid transparent;
-}
-
-.log-entry.success {
-  background: rgba(76, 175, 80, 0.1);
-  border-left-color: var(--resort-palm);
-}
-
-.log-entry.warning {
-  background: rgba(255, 193, 7, 0.1);
-  border-left-color: var(--resort-gold);
-}
-
-.log-entry.danger {
-  background: rgba(220, 53, 69, 0.1);
-  border-left-color: var(--resort-sunset);
-}
-
-.log-timestamp {
-  font-size: 0.8rem;
-  color: var(--gray-medium);
-  margin-right: var(--spacing-sm);
 }
 
 /* Responsive Design */
 @media (max-width: 1200px) {
   .game-content {
-    flex-direction: column;
-  }
-  
-  .game-board, .right-panel {
-    flex: none;
+    grid-template-columns: 1fr 300px;
   }
 }
 
 @media (max-width: 768px) {
-  .screen {
-    padding: var(--spacing-md);
+  .game-content {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
   }
   
-  h1 { font-size: 2.5rem; }
-  h2 { font-size: 2rem; }
-  h3 { font-size: 1.5rem; }
-  
-  .game-header {
-    padding: var(--spacing-md);
-  }
-  
-  .game-header .game-info {
-    flex-direction: column;
-    gap: var(--spacing-md);
-  }
-  
-  .game-header h1 {
-    font-size: 2rem;
-  }
-  
-  .game-status {
-    flex-wrap: wrap;
-    justify-content: center;
+  .right-panel {
+    max-height: 300px;
   }
   
   .resort-board {
-    height: 400px;
-  }
-  
-  .location-card {
-    width: 90px;
-    height: 70px;
-  }
-  
-  .location-name {
-    font-size: 0.6rem;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
   }
   
   .central-area {
-    width: 140px;
-    height: 100px;
-  }
-  
-  .logo-text {
-    font-size: 1.2rem;
-  }
-  
-  .logo-subtext {
-    font-size: 0.7rem;
-  }
-  
-  .coral-position {
-    width: 30px;
-    height: 40px;
-  }
-  
-  .board-trackers {
-    flex-direction: column;
-    gap: var(--spacing-md);
-  }
-  
-  .players-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .team-selection {
-    grid-template-columns: 1fr;
-  }
-  
-  .cards-container {
-    justify-content: center;
-  }
-  
-  .card {
-    width: 60px;
-    height: 80px;
-    font-size: 1rem;
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
   }
 }
 
-/* Scrollbar Styling */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--gray-light);
-  border-radius: var(--border-radius);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--resort-coral);
-  border-radius: var(--border-radius);
+  background: var(--gradient-gold);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--resort-sunset);
+  background: var(--gold-light);
 }
 
-/* Update suit symbol styles for Triangle and Circle */
-.suit-symbol.triangle { 
-  color: var(--resort-coral); 
+/* Add these styles for the simplified UI */
+.selection-step {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
 }
 
-.suit-symbol.circle { 
-  color: var(--resort-teal); 
+.location-buttons, .player-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
 }
 
-/* Remove old card suit styles and add new ones */
-.card.supply[data-suit="Triangle"] {
-  border-left: 4px solid var(--resort-coral);
+.location-btn, .player-btn, .team-btn {
+    padding: 8px 12px;
+    border: 2px solid #007bff;
+    background: white;
+    color: #007bff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.card.supply[data-suit="Circle"] {
-  border-left: 4px solid var(--resort-teal);
+.location-btn:hover, .player-btn:hover, .team-btn:hover {
+    background: #f8f9fa;
 }
 
-/* Voting Actions */
+.btn-primary {
+    background: #007bff !important;
+    color: white !important;
+}
+
+.btn-large {
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
 .vote-buttons {
     display: flex;
-    gap: var(--spacing-lg);
+    gap: 20px;
     justify-content: center;
-    margin-top: var(--spacing-lg);
+    margin: 20px 0;
 }
 
-.vote-buttons .btn {
-    flex: 1;
-    max-width: 200px;
-    min-height: 60px;
-    font-size: 1.1rem;
-    font-weight: 700;
+.mission-details {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 15px 0;
 }
 
-.mission-info {
-    background: var(--resort-cream);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius);
-    margin-bottom: var(--spacing-lg);
-    border: 2px solid var(--resort-gold);
-}
-
-.mission-info h4 {
-    color: var(--resort-navy);
-    margin-bottom: var(--spacing-sm);
-}
-
-.mission-info p {
-    margin-bottom: var(--spacing-xs);
-}
-
-.mission-info strong {
-    color: var(--resort-coral);
-}
-
-/* Enhanced Scout Selection */
-.scout-selection-container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xl);
-    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-    backdrop-filter: blur(10px);
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-xl);
-    border: 2px solid var(--resort-gold);
-    box-shadow: var(--shadow-lg);
-}
-
-.selection-step {
-    background: var(--resort-cream);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-lg);
-    border: 1px solid var(--resort-gold);
-}
-
-.selection-step h4 {
-    color: var(--resort-navy);
-    margin-bottom: var(--spacing-sm);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.step-instruction {
-    color: var(--gray-medium);
-    font-style: italic;
-    margin-bottom: var(--spacing-md);
-}
-
-.selected-item {
-    background: var(--resort-sand);
-    border-radius: var(--border-radius-sm);
-    padding: var(--spacing-md);
-    border: 2px solid var(--resort-coral);
-    margin-top: var(--spacing-md);
-}
-
-.selection-label {
-    font-weight: 600;
-    color: var(--resort-navy);
-}
-
-.selection-value {
-    color: var(--resort-coral);
-    font-weight: 500;
-    margin-left: var(--spacing-sm);
-}
-
-.team-selection-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-xl);
-    margin-top: var(--spacing-lg);
-}
-
-.bodyguard-selection h5,
-.team-members-selection h5 {
-    color: var(--resort-navy);
-    margin-bottom: var(--spacing-md);
+.waiting-indicator {
     text-align: center;
-    font-size: 1.1rem;
+    padding: 20px;
 }
 
-.player-cards-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
-}
-
-.player-selection-card {
-    background: linear-gradient(135deg, var(--white), var(--resort-cream));
-    border: 2px solid var(--resort-gold);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-md);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-align: center;
-    box-shadow: var(--shadow-sm);
-    position: relative;
-    overflow: hidden;
-}
-
-.player-selection-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--resort-coral);
-}
-
-.player-selection-card.selected {
-    background: linear-gradient(135deg, var(--resort-coral), var(--resort-sunset));
-    color: var(--white);
-    border-color: var(--resort-sunset);
-    box-shadow: var(--shadow-lg);
-}
-
-.player-selection-card.selected::before {
-    content: '✓';
-    position: absolute;
-    top: 4px;
-    right: 8px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: var(--white);
-}
-
-.player-selection-card.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: var(--gray-light);
-    border-color: var(--gray-medium);
-}
-
-.player-card-name {
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: var(--spacing-xs);
-}
-
-.player-card-character {
-    font-size: 0.8rem;
-    color: var(--gray-medium);
-    font-style: italic;
-}
-
-.player-selection-card.selected .player-card-character {
-    color: rgba(255, 255, 255, 0.9);
-}
-
-/* Interactive Location Cards */
-.location-card {
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.location-card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--resort-gold);
-}
-
-.location-card.selectable {
-    animation: pulse-glow 2s ease-in-out infinite;
-}
-
-.location-card.selected {
-    border-color: var(--resort-coral);
-    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.3);
-    transform: translateY(-3px);
-}
-
-.location-card.current {
-    border-color: var(--resort-sunset);
-    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.3);
-}
-
-.location-card.disarmed {
-    background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(39, 174, 96, 0.1));
-    border-color: var(--resort-teal);
-}
-
-.location-card.selected::after {
-    content: '🎯';
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    background: var(--resort-coral);
-    color: var(--white);
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007bff;
     border-radius: 50%;
     width: 30px;
     height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Players Display Styles */
+.players-display {
+    background: var(--card-bg, #2a2a2a);
+    border-radius: 12px;
+    padding: 1rem;
+    margin: 1rem;
+    border: 2px solid var(--border-color, #444);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.players-display h3 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary, #fff);
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+.players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.player-card {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    border: 2px solid var(--white);
-}
-
-@keyframes pulse-glow {
-    0%, 100% {
-        box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
-    }
-    50% {
-        box-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
-    }
-}
-
-/* Mission Summary */
-.mission-summary {
-    background: linear-gradient(135deg, var(--resort-navy), var(--resort-sky));
-    color: var(--white);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-lg);
-    box-shadow: var(--shadow-md);
-}
-
-.mission-summary h4 {
-    color: var(--white);
-    margin-bottom: var(--spacing-md);
-}
-
-.summary-content {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: var(--border-radius-sm);
-    padding: var(--spacing-md);
-    backdrop-filter: blur(5px);
-}
-
-.summary-item {
-    display: flex;
     justify-content: space-between;
-    margin-bottom: var(--spacing-xs);
-    padding: var(--spacing-xs) 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.summary-item:last-child {
-    border-bottom: none;
-}
-
-.summary-label {
-    font-weight: 500;
-    opacity: 0.9;
-}
-
-.summary-value {
-    font-weight: 600;
-    color: var(--resort-gold);
-}
-
-/* Enhanced Confirm Button */
-.btn-large {
-    font-size: 1.3rem;
-    padding: var(--spacing-lg) var(--spacing-2xl);
-    min-height: 60px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 700;
+    padding: 0.75rem;
+    background: var(--bg-secondary, #1a1a1a);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
     position: relative;
-    overflow: hidden;
 }
 
-.btn-large::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    transition: left 0.5s ease;
+.player-card.scout {
+    border-color: #ff6b6b;
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), var(--bg-secondary, #1a1a1a));
+    box-shadow: 0 0 15px rgba(255, 107, 107, 0.3);
+    animation: scoutPulse 2s infinite;
 }
 
-.btn-large:hover:not(:disabled)::before {
-    left: 100%;
+@keyframes scoutPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
 }
 
-.btn-icon {
-    margin-right: var(--spacing-sm);
+.player-card.bodyguard {
+    border-color: #4ecdc4;
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.2), var(--bg-secondary, #1a1a1a));
+}
+
+.player-card.current-player {
+    border-color: #ffd93d;
+    background: linear-gradient(135deg, rgba(255, 217, 61, 0.2), var(--bg-secondary, #1a1a1a));
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.player-name {
+    font-weight: 600;
+    color: var(--text-primary, #fff);
+    font-size: 1rem;
+}
+
+.player-character {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #ccc);
+    opacity: 0.8;
+}
+
+.player-roles {
+    display: flex;
+    gap: 0.25rem;
     font-size: 1.4rem;
+    align-items: center;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .team-selection-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .player-cards-container {
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    }
-    
-    .scout-selection-container {
-        padding: var(--spacing-lg);
-    }
+.role-legend {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
 }
 
-/* BIGGER, MORE IMPRESSIVE LOCATION CARD CONTENT */
-.location-image {
-  font-size: 3.5rem; /* Much bigger icons */
-  margin-bottom: var(--spacing-md);
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2));
-  transform: scale(1);
-  transition: all 0.3s ease;
+.legend-item {
+    font-size: 0.9rem;
+    color: var(--text-secondary, #ccc);
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-secondary, #1a1a1a);
+    border-radius: 4px;
 }
 
-.location-card:hover .location-image {
-  transform: scale(1.1);
+.current-scout-highlight {
+    text-align: center;
+    padding: 0.5rem;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
 }
 
-.location-name {
-  font-size: 1rem; /* Bigger text */
-  font-weight: 700;
-  color: var(--resort-navy);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: var(--spacing-md);
-  line-height: 1.1;
-  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
-  background: linear-gradient(135deg, var(--resort-navy) 0%, var(--resort-teal) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.current-scout-highlight.hidden {
+    display: none;
 }
 
-/* MUCH MORE PROMINENT TRAP DISPLAYS */
+/* Enhanced Scout Selection UI */
+.scout-interface {
+    max-width: 100%;
+}
+
+.selection-step {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    border-left: 4px solid var(--gold, #D4B996);
+}
+
+.location-buttons, .player-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.location-btn, .player-btn, .team-btn {
+    padding: 0.5rem 0.75rem;
+    border: 2px solid rgba(212, 185, 150, 0.3);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--pearl, #E6E6FA);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.location-btn:hover, .player-btn:hover, .team-btn:hover {
+    background: rgba(212, 185, 150, 0.1);
+    border-color: var(--gold, #D4B996);
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--gold, #D4B996), #C5A572) !important;
+    color: var(--deep-navy, #0B1426) !important;
+    border-color: var(--gold, #D4B996) !important;
+    font-weight: 600;
+}
+
+.btn-large {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    margin-top: 1rem;
+}
+
+.btn-large:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Trap Display Updates */
 .trap-display {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-md);
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.1) 100%);
-  border-radius: var(--border-radius);
-  padding: var(--spacing-md);
-  font-size: 1.1rem;
-  width: 100%;
-  min-height: 45px;
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 0.8rem;
+    color: var(--pearl, #E6E6FA);
+    opacity: 0.8;
+    font-weight: 600;
 }
 
 .trap-value {
-  font-weight: 900;
-  color: var(--resort-navy);
-  font-size: 1.4rem; /* Much bigger numbers */
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    color: #ff6b6b;
+    font-weight: bold;
 }
 
-.trap-suits {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.suit-symbol {
-  font-size: 1.2rem; /* Bigger symbols */
-  font-weight: 700;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
-}
-
-/* BETTER INDICATOR STYLING */
-.safe-indicator {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--resort-palm);
-  background: linear-gradient(135deg, rgba(39, 174, 96, 0.1) 0%, rgba(39, 174, 96, 0.2) 100%);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--border-radius);
-  border: 2px solid var(--resort-palm);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-.disarmed-indicator {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--resort-teal);
-  background: linear-gradient(135deg, rgba(78, 205, 196, 0.1) 0%, rgba(78, 205, 196, 0.2) 100%);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--border-radius);
-  border: 2px solid var(--resort-teal);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-/* ENHANCED HOVER EFFECTS */
-.location-card:hover {
-  transform: translateY(-8px) scale(1.03);
-  box-shadow: 
-    0 15px 35px rgba(78, 205, 196, 0.3),
-    0 8px 15px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  border-color: var(--resort-teal);
-}
-
-.location-card.selected {
-  border-color: var(--resort-coral);
-  box-shadow: 
-    0 15px 35px rgba(255, 107, 107, 0.4),
-    0 8px 15px rgba(0, 0, 0, 0.2),
-    0 0 0 4px rgba(255, 107, 107, 0.3);
-  transform: translateY(-8px) scale(1.03);
+.trap-suit {
+    margin-left: 0.25rem;
 } 

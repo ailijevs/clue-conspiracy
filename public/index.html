@@ -8,23 +8,30 @@
 </head>
 <body>
     <div id="app">
-        <!-- Login Screen -->
+        <!-- Login Screen - Hotel Check-in Experience -->
         <div id="login-screen" class="screen active">
             <div class="login-container">
-                <h1>🕵️ Clue Conspiracy</h1>
-                <p class="subtitle">A Social Deduction Mystery Game</p>
-                <form id="login-form" class="login-form">
-                    <input type="text" id="player-name" placeholder="Enter your name" required maxlength="20">
-                    <input type="text" id="game-id" placeholder="Game ID (leave blank to create new game)" maxlength="10">
-                    <button type="submit" class="btn btn-primary">Join Game</button>
-                </form>
-                <div class="instructions">
-                    <p><strong>How to play with friends:</strong></p>
-                    <p>1. One person creates a game (leave Game ID blank)</p>
-                    <p>2. Share the Game ID with friends</p>
-                    <p>3. Friends enter the same Game ID to join</p>
-                    <p>4. Need 4-10 players to start</p>
+                <div class="resort-logo">
+                    <div class="logo-icon">🏨</div>
+                    <h1 class="title-luxury">Black Adder Resort</h1>
+                    <p class="subtitle-luxury">Digital Concierge Experience</p>
                 </div>
+                
+                <form id="login-form">
+                    <div class="input-luxury">
+                        <input type="text" id="player-name" placeholder="Enter your distinguished name" required>
+                    </div>
+                    <div class="input-luxury">
+                        <input type="text" id="game-id" placeholder="Private suite number (optional)">
+                    </div>
+                    <button type="submit" class="btn-luxury">
+                        Enter Resort
+                    </button>
+                </form>
+                
+                <p class="luxury-disclaimer">
+                    Welcome to the most exclusive mystery experience
+                </p>
             </div>
         </div>
 
@@ -45,474 +52,201 @@
                 </div>
                 
                 <div class="lobby-actions">
-                    <button id="start-game-btn" class="btn btn-primary" disabled>Start Game (Need 4+ players)</button>
+                    <button id="start-game-btn" class="btn btn-primary" onclick="forceStartGame()">Force Start Game</button>
+                    <button onclick="showScreen('game-screen')" class="btn btn-secondary">Manual Switch to Game</button>
+                    <p id="debug-info" style="color: red; font-size: 12px;"></p>
                 </div>
             </div>
         </div>
 
-        <!-- Game Screen -->
+        <!-- Game Screen - Resort Control Interface -->
         <div id="game-screen" class="screen">
-            <!-- Header -->
-            <div class="game-header">
-                <div class="game-info">
-                    <h1>🕵️ Clue Conspiracy</h1>
-                    <div class="game-status">
-                        <span class="status-item">
-                            <span class="label">Phase:</span>
-                            <span id="game-phase" class="value">-</span>
-                        </span>
-                        <span class="status-item">
-                            <span class="label">Round:</span>
-                            <span id="round-info" class="value">-</span>
-                        </span>
-                        <span class="status-item">
-                            <span class="label">Game ID:</span>
-                            <span id="game-id-display-game" class="value game-id">-</span>
-                        </span>
+            <header class="game-header">
+                <div class="game-branding">
+                    <h1 class="game-title">Clue Conspiracy</h1>
+                    <p class="game-subtitle">Black Adder Resort Investigation</p>
+                </div>
+                
+                <div class="status-bar">
+                    <div class="status-item">
+                        <span class="status-icon">🏃‍♂️</span>
+                        <span class="status-text" id="current-phase">Setup</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">🔢</span>
+                        <span class="status-text">Round <span id="round-number">1</span></span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">❤️</span>
+                        <span class="status-text" id="coral-health">3/3</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">⛈️</span>
+                        <span class="status-text" id="storm-status">0/3</span>
                     </div>
                 </div>
-                <div class="health-section">
-                    <div class="health-item">
-                        <span class="label">Mr. Coral Health:</span>
-                        <div id="coral-health" class="health-hearts">♥♥♥</div>
-                    </div>
-                    <div class="health-item">
-                        <span class="label">Storm Tracker:</span>
-                        <div id="storm-tracker" class="storm-clouds">☁☁☁</div>
-                    </div>
+            </header>
+            
+            <!-- PLAYERS DISPLAY - CRITICAL FOR SCOUT VISIBILITY -->
+            <div class="players-display" id="game-players-display">
+                <h3>🎭 Players & Roles - Round <span id="current-round-display">1</span></h3>
+                <div id="game-players-grid" class="players-grid">
+                    <!-- Players will be populated here by JavaScript -->
+                </div>
+                <div class="role-legend">
+                    <span class="legend-item">🎯 Scout (Team Leader)</span>
+                    <span class="legend-item">🛡️ Bodyguard</span>
+                    <span class="legend-item">👤 You</span>
+                </div>
+                <div class="current-scout-highlight" id="scout-announcement">
+                    <!-- Will show current scout prominently -->
                 </div>
             </div>
-
-            <!-- Add activity display -->
-            <div class="activity-display" id="current-activity">
-                <div class="activity-primary">Starting game...</div>
-                <div class="activity-secondary">Preparing roles and board</div>
-            </div>
-
-            <!-- Add waiting indicator (will be shown/hidden dynamically) -->
-            <div class="waiting-indicator" id="waiting-indicator">
-                <div class="waiting-content">
-                    <div class="waiting-spinner"></div>
-                    <div class="waiting-text">Waiting for players...</div>
-                </div>
-            </div>
-
-            <!-- Main Content -->
-            <div class="game-content">
-                <!-- Left Panel: Game Board -->
-                <div class="game-board">
-                    <h2>🏝️ Black Adder Resort</h2>
-                    <div class="resort-board-container">
-                        <div class="resort-board" id="resort-board">
-                            
-                            <!-- Top Row Locations -->
-                            <div class="location-card top-left" data-location="Palm Lounge">
-                                <div class="location-image">🌴</div>
-                                <div class="location-name">PALM LOUNGE</div>
-                                <div class="trap-display">
-                                    <span class="trap-value">7</span>
-                                    <div class="trap-suits">
-                                        <div class="suit-symbol triangle">▲</div>
-                                    </div>
-                                </div>
+            
+            <main class="game-content">
+                <!-- Complete Resort Board -->
+                <section class="game-board">
+                    <div class="resort-board" id="resort-board">
+                        <!-- Top Row -->
+                        <div class="location-card" data-location="Palm Lounge">
+                            <div class="location-image">🌴</div>
+                            <div class="location-name">PALM LOUNGE</div>
+                            <div class="trap-display"></div>
+                        </div>
+                        
+                        <div class="location-card" data-location="Lifeguard Post">
+                            <div class="location-image">🏖️</div>
+                            <div class="location-name">LIFEGUARD POST</div>
+                            <div class="trap-display"></div>
+                        </div>
+                        
+                        <div class="location-card" data-location="Utility Room">
+                            <div class="location-image">🔧</div>
+                            <div class="location-name">UTILITY ROOM</div>
+                            <div class="trap-display"></div>
+                        </div>
+                        
+                        <!-- Middle Row -->
+                        <div class="location-card" data-location="Concierge Station">
+                            <div class="location-image">🎩</div>
+                            <div class="location-name">CONCIERGE STATION</div>
+                            <div class="trap-display"></div>
+                        </div>
+                        
+                        <!-- Central Area -->
+                        <div class="central-area">
+                            <div class="resort-logo-main">
+                                <div class="logo-text">Clue</div>
+                                <div class="logo-subtext">CONSPIRACY</div>
                             </div>
-                            
-                            <div class="location-card top-center" data-location="Lifeguard Post">
-                                <div class="location-image">🏖️</div>
-                                <div class="location-name">LIFEGUARD POST</div>
-                                <div class="trap-display">
-                                    <span class="trap-value">5</span>
-                                    <div class="trap-suits">
-                                        <div class="suit-symbol circle">●</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="location-card top-right" data-location="Hidden Cove">
-                                <div class="location-image">🏞️</div>
-                                <div class="location-name">HIDDEN COVE</div>
-                                <div class="trap-display">
-                                    <span class="trap-value">5</span>
-                                    <div class="trap-suits">
-                                        <div class="suit-symbol spades">♠</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Left Side Locations -->
-                            <div class="location-card left-top" data-location="Utility Room">
-                                <div class="location-image">🔧</div>
-                                <div class="location-name">UTILITY ROOM</div>
-                                <div class="trap-display">
-                                    <span class="trap-value">5</span>
-                                    <div class="trap-suits">
-                                        <div class="suit-symbol diamonds">♦</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="location-card left-bottom" data-location="Botanical Spa">
-                                <div class="location-image">🌺</div>
-                                <div class="location-name">BOTANICAL SPA</div>
-                                <div class="trap-display">
-                                    <span class="trap-value">7</span>
-                                    <div class="trap-suits">
-                                        <div class="suit-symbol hearts">♥</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Right Side Locations -->
-                            <div class="location-card right-top" data-location="Royal Villa">
-                                <div class="location-image">🏰</div>
-                                <div class="location-name">ROYAL VILLA</div>
-                                <div class="trap-display">
-                                    <span class="trap-value">4</span>
-                                    <div class="trap-suits">
-                                        <div class="suit-symbol spades">♠</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Bottom Row Locations -->
-                            <div class="location-card bottom-left" data-location="Infinity Pool">
-                                <div class="location-image">🏊‍♀️</div>
-                                <div class="location-name">INFINITY POOL</div>
-                                <div class="trap-display">
-                                    <span class="trap-value">7</span>
-                                    <div class="trap-suits">
-                                        <div class="suit-symbol clubs">♣</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="location-card bottom-center" data-location="Concierge Station">
-                                <div class="location-image">🎩</div>
-                                <div class="location-name">CONCIERGE STATION</div>
-                                <div class="trap-display">
-                                    <span class="trap-value">5</span>
-                                    <div class="trap-suits">
-                                        <div class="suit-symbol diamonds">♦</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="location-card bottom-right" data-location="Observation Deck">
-                                <div class="location-image">🔭</div>
-                                <div class="location-name">OBSERVATION DECK</div>
-                                <div class="trap-display">
-                                    <span class="trap-value">5</span>
-                                    <div class="trap-suits">
-                                        <div class="suit-symbol diamonds">♦</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Central Logo Area -->
-                            <div class="central-area">
-                                <div class="game-logo">
-                                    <div class="logo-text">Clue</div>
-                                    <div class="logo-subtext">CONSPIRACY</div>
-                                </div>
-                                
-                                <!-- Supply Areas -->
-                                <div class="supply-areas">
-                                    <div class="supply-deck">
-                                        <div class="supply-label">SUPPLY</div>
-                                        <div class="supply-sublabel">Gather Supplies Here</div>
-                                    </div>
-                                    <div class="discard-pile">
-                                        <div class="discard-label">DISCARD</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Mr. Coral Position Indicator -->
-                            <div class="coral-position" id="coral-position">
+                            <div class="coral-status">
                                 <div class="coral-avatar">👨‍💼</div>
-                                <div class="coral-label">MR. CORAL</div>
+                                <div class="coral-name">Mr. Coral</div>
                             </div>
-                            
                         </div>
                         
-                        <!-- Bottom Trackers -->
-                        <div class="board-trackers">
-                            <div class="tracker storm-tracker">
-                                <div class="tracker-label">STORM TRACKER</div>
-                                <div class="tracker-circles" id="storm-circles">
-                                    <div class="tracker-circle"></div>
-                                    <div class="tracker-circle"></div>
-                                    <div class="tracker-circle"></div>
-                                </div>
-                            </div>
-                            
-                            <div class="tracker health-tracker">
-                                <div class="tracker-label">HEALTH TRACKER</div>
-                                <div class="tracker-label-sub">MR. CORAL'S</div>
-                                <div class="tracker-label-danger">IN DANGER!</div>
-                                <div class="tracker-circles" id="health-circles">
-                                    <div class="tracker-circle health-circle active">❤️</div>
-                                    <div class="tracker-circle health-circle active">❤️</div>
-                                    <div class="tracker-circle health-circle active">❤️</div>
-                                </div>
-                            </div>
+                        <div class="location-card" data-location="Hidden Cove">
+                            <div class="location-image">🏊‍♂️</div>
+                            <div class="location-name">HIDDEN COVE</div>
+                            <div class="trap-display"></div>
                         </div>
+                        
+                        <!-- Bottom Row -->
+                        <div class="location-card" data-location="Infinity Pool">
+                            <div class="location-image">🏊</div>
+                            <div class="location-name">INFINITY POOL</div>
+                            <div class="trap-display"></div>
+                        </div>
+                        
+                        <div class="location-card" data-location="Botanical Spa">
+                            <div class="location-image">🌺</div>
+                            <div class="location-name">BOTANICAL SPA</div>
+                            <div class="trap-display"></div>
+                        </div>
+                        
+                        <div class="location-card" data-location="Observation Deck">
+                            <div class="location-image">🔭</div>
+                            <div class="location-name">OBSERVATION DECK</div>
+                            <div class="trap-display"></div>
+                        </div>
+                        
+                        <div class="location-card" data-location="Royal Villa">
+                            <div class="location-image">👑</div>
+                            <div class="location-name">ROYAL VILLA</div>
+                            <div class="trap-display"></div>
+                        </div>
+                        
+                        <!-- Mr. Coral position indicator -->
+                        <div id="coral-position" class="coral-indicator">👨‍💼</div>
                     </div>
-                </div>
-
-                <!-- Right Panel: Player Info & Actions -->
-                <div class="right-panel">
-                    <!-- Your Info -->
+                </section>
+                
+                <!-- VIP Interface Panel -->
+                <aside class="right-panel">
                     <div class="player-info-card">
-                        <h3>Your Character</h3>
-                        <div class="character-info">
-                            <div class="character-name" id="my-character">-</div>
-                            <div class="secret-role" id="my-secret-role">
-                                <span class="role-label">Secret Role:</span>
-                                <span class="role-value" id="role-display">Unknown</span>
-                            </div>
+                        <h3>Your Identity</h3>
+                        <div class="character-name" id="character-display">-</div>
+                        <div class="secret-role">
+                            <div class="role-label">Confidential Role</div>
+                            <div class="role-value" id="role-display">Unknown</div>
                         </div>
-                        
-                        <!-- Plot Info (only for conspiracy) -->
-                        <div id="plot-info" class="plot-info hidden">
-                            <h4>🎯 Secret Plot</h4>
-                            <div class="plot-details">
-                                <!-- Plot details populated by JS -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Your Cards -->
-                    <div class="cards-section">
-                        <div class="supply-cards-section">
-                            <h4>Supply Cards (<span id="supply-count">0</span>)</h4>
-                            <div id="supply-cards" class="cards-container">
-                                <!-- Supply cards populated by JS -->
-                            </div>
-                        </div>
-                        
-                        <div class="clue-cards-section">
-                            <h4>Clue Cards (<span id="clue-count">0</span>)</h4>
-                            <div id="clue-cards" class="cards-container">
-                                <!-- Clue cards populated by JS -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action Panels -->
-            <div class="action-panels">
-                <!-- Setup Actions -->
-                <div id="setup-actions" class="action-panel">
-                    <div class="action-header">
-                        <h3>🎭 Game Setup</h3>
-                        <p>Roles have been assigned. Ready to begin the conspiracy phase?</p>
-                    </div>
-                    <button id="begin-conspiracy-btn" class="btn btn-primary">Begin Conspiracy Phase</button>
-                </div>
-
-                <!-- Conspiracy Plotting -->
-                <div id="plotting-actions" class="action-panel">
-                    <div class="action-header">
-                        <h3>🤫 Conspiracy Planning</h3>
-                        <div class="conspiracy-instructions">
-                            <p><strong>Instructions:</strong></p>
-                            <ol>
-                                <li>Everyone close your eyes and make background noise</li>
-                                <li>Conspiracy members (Ringleader + Accomplices): Open your eyes</li>
-                                <li>Ringleader: Share the plot location and weapon with accomplices</li>
-                                <li>Conspiracy members: Close your eyes</li>
-                                <li>Everyone: Open your eyes</li>
-                            </ol>
-                        </div>
-                    </div>
-                    <button id="finish-conspiracy-btn" class="btn btn-primary">Finish Plotting Phase</button>
-                </div>
-
-                <!-- Scout Actions -->
-                <div id="scout-actions" class="action-panel">
-                    <div class="action-header">
-                        <h3>🎯 Scout: Choose Your Mission</h3>
-                        <p>Click on a location, then select your bodyguard and team members</p>
                     </div>
                     
-                    <div class="scout-selection-container">
-                        <!-- Step 1: Location Selection -->
-                        <div class="selection-step">
-                            <h4>1. Choose Location</h4>
-                            <p class="step-instruction">Click on a location on the board above ⬆️</p>
-                            <div id="selected-location" class="selected-item">
-                                <span class="selection-label">Selected:</span>
-                                <span class="selection-value">None</span>
-                            </div>
+                    <div class="cards-section">
+                        <h4>Your Assets</h4>
+                        <div class="cards-container" id="player-cards">
+                            <!-- Premium card displays -->
+                        </div>
+                    </div>
+                    
+                    <div class="action-panels">
+                        <!-- Scout Actions -->
+                        <div id="scout-actions" class="action-panel">
+                            <h3>🎯 Scout: Choose Mission</h3>
+                            <p>Select location, bodyguard, and team members.</p>
+                            <button id="confirm-mission-btn" class="btn btn-primary">Confirm Mission</button>
                         </div>
                         
-                        <!-- Step 2: Player Selection -->
-                        <div class="selection-step">
-                            <h4>2. Select Your Team</h4>
-                            <div class="team-selection-grid">
-                                <div class="bodyguard-selection">
-                                    <h5>👑 Choose Bodyguard</h5>
-                                    <div id="bodyguard-cards" class="player-cards-container">
-                                        <!-- Player cards populated by JS -->
-                                    </div>
-                                    <div id="selected-bodyguard" class="selected-item">
-                                        <span class="selection-label">Bodyguard:</span>
-                                        <span class="selection-value">None</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="team-members-selection">
-                                    <h5>👥 Additional Team Members (Optional)</h5>
-                                    <div id="team-member-cards" class="player-cards-container">
-                                        <!-- Player cards populated by JS -->
-                                    </div>
-                                    <div id="selected-team-members" class="selected-item">
-                                        <span class="selection-label">Team:</span>
-                                        <span class="selection-value">You + Bodyguard</span>
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- Voting Actions -->
+                        <div id="voting-actions" class="action-panel">
+                            <h3>🗳️ Vote on Mission</h3>
+                            <button id="vote-approve" class="btn btn-success">✅ Approve</button>
+                            <button id="vote-reject" class="btn btn-danger">❌ Reject</button>
                         </div>
                         
-                        <!-- Mission Summary -->
-                        <div class="mission-summary">
-                            <h4>🎯 Mission Summary</h4>
-                            <div id="mission-summary-content" class="summary-content">
-                                <p>Select a location and bodyguard to see mission details</p>
-                            </div>
+                        <!-- Plot Check Actions -->
+                        <div id="plot-check-actions" class="action-panel">
+                            <h3>🕵️ Plot Check</h3>
+                            <button id="check-plot-btn" class="btn btn-warning">Check for Plot</button>
                         </div>
                         
-                        <button id="confirm-mission-btn" class="btn btn-primary btn-large" disabled>
-                            <span class="btn-icon">🚀</span>
-                            Confirm Mission
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Voting Actions -->
-                <div id="voting-actions" class="action-panel">
-                    <div class="action-header">
-                        <h3>🗳️ Vote on Mission</h3>
-                        <div id="mission-info" class="mission-info">
-                            <!-- Mission details populated by JS -->
+                        <!-- Disarming Actions -->
+                        <div id="disarming-actions" class="action-panel">
+                            <h3>🔓 Disarm Trap</h3>
+                            <div id="supply-cards-container"></div>
+                            <button id="submit-cards-btn" class="btn btn-primary">Submit Supply Cards</button>
+                        </div>
+                        
+                        <!-- Collecting Actions -->
+                        <div id="collecting-actions" class="action-panel">
+                            <h3>🔍 Collect Clues</h3>
+                            <button id="collect-clues-btn" class="btn btn-primary">Collect Clues</button>
+                        </div>
+                        
+                        <!-- Supply Distribution -->
+                        <div id="supplying-actions" class="action-panel">
+                            <h3>🎒 Distribute Supplies</h3>
+                            <button id="distribute-supplies-btn" class="btn btn-primary">Distribute</button>
+                        </div>
+                        
+                        <!-- Final Accusation -->
+                        <div id="final-accusation-actions" class="action-panel">
+                            <h3>⚖️ Final Accusation</h3>
+                            <button id="submit-accusation-btn" class="btn btn-danger">Submit Accusation</button>
                         </div>
                     </div>
-                    <div class="vote-buttons">
-                        <button id="vote-approve" class="btn btn-success">👍 Approve</button>
-                        <button id="vote-reject" class="btn btn-danger">👎 Reject</button>
-                    </div>
-                </div>
-
-                <!-- Plot Check Actions -->
-                <div id="plot-check-actions" class="action-panel">
-                    <div class="action-header">
-                        <h3>🎯 Plot Check</h3>
-                        <p>Has the conspiracy's plot been activated?</p>
-                    </div>
-                    <button id="check-plot-btn" class="btn btn-primary">Check Plot</button>
-                </div>
-
-                <!-- Disarming Actions -->
-                <div id="disarming-actions" class="action-panel">
-                    <div class="action-header">
-                        <h3>🔧 Disarm Trap</h3>
-                        <p>Select supply cards to submit for disarming the trap.</p>
-                        <div id="contribution-preview" class="contribution-preview">
-                            <!-- Contribution preview populated by JS -->
-                        </div>
-                    </div>
-                    <button id="submit-cards-btn" class="btn btn-primary">Submit Cards</button>
-                </div>
-
-                <!-- Collecting Actions -->
-                <div id="collecting-actions" class="action-panel">
-                    <div class="action-header">
-                        <h3>🔍 Collect Clues</h3>
-                        <p>As the bodyguard, collect clues and decide what to tell others.</p>
-                        <div id="actual-clue" class="actual-clue">
-                            <!-- Actual clue found populated by JS -->
-                        </div>
-                    </div>
-                    <div class="clue-claims">
-                        <div class="form-group">
-                            <label>Claim you found (Weapon):</label>
-                            <select id="weapon-claim-select" class="form-control">
-                                <option value="">None</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Claim you found (Location):</label>
-                            <select id="location-claim-select" class="form-control">
-                                <option value="">None</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button id="collect-clues-btn" class="btn btn-primary">Collect Clues</button>
-                </div>
-
-                <!-- Supplying Actions -->
-                <div id="supplying-actions" class="action-panel">
-                    <div class="action-header">
-                        <h3>🎒 Distribute Supply Cards</h3>
-                        <p>As the Scout, distribute supply cards to team members.</p>
-                    </div>
-                    <button id="distribute-supplies-btn" class="btn btn-primary">Distribute Supplies</button>
-                </div>
-
-                <!-- Final Accusation Actions -->
-                <div id="final-accusation-actions" class="action-panel">
-                    <div class="action-header">
-                        <h3>⚖️ Final Accusation</h3>
-                        <p>Mr. Coral is dead! Make your final accusation to win.</p>
-                    </div>
-                    <div class="accusation-form">
-                        <div class="form-group">
-                            <label>WHO (Ringleader):</label>
-                            <select id="accusation-who" class="form-control">
-                                <option value="">Select character...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>WHERE (Plot Location):</label>
-                            <select id="accusation-where" class="form-control">
-                                <option value="">Select location...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>WHAT (Plot Weapon):</label>
-                            <select id="accusation-what" class="form-control">
-                                <option value="">Select weapon...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button id="submit-accusation-btn" class="btn btn-danger">Submit Final Accusation</button>
-                </div>
-
-                <!-- Game Over Actions -->
-                <div id="game-over-actions" class="action-panel">
-                    <div class="action-header">
-                        <h3>🎮 Game Over</h3>
-                        <div id="game-result" class="game-result">
-                            <!-- Game result populated by JS -->
-                        </div>
-                    </div>
-                    <button id="new-game-btn" class="btn btn-primary">New Game</button>
-                </div>
-
-                <!-- Final Team Selection -->
-                <div id="final-team-selection" class="action-panel">
-                    <div class="action-header">
-                        <h3>📋 Final Round Team Selection</h3>
-                        <p>Choose team members for the final clue gathering round.</p>
-                    </div>
-                    <div class="team-selection">
-                        <!-- Team checkboxes populated by JS -->
-                    </div>
-                    <button id="propose-final-team-btn" class="btn btn-primary">Propose Final Team</button>
-                </div>
-            </div>
+                </aside>
+            </main>
         </div>
 
         <!-- Game Log -->
@@ -522,7 +256,25 @@
         </div>
     </div>
 
+    <!-- Add this test button anywhere in your HTML -->
+    <button onclick="testConnection()" style="position: fixed; top: 10px; right: 10px; z-index: 9999;">Test Connection</button>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
+
+    <script>
+    function testConnection() {
+        console.log('🧪 Testing connection...');
+        console.log('Socket exists:', typeof socket !== 'undefined');
+        console.log('Socket connected:', socket?.connected);
+        
+        if (socket && socket.connected) {
+            console.log('✅ Sending test message...');
+            socket.emit('test_message', { message: 'Hello server!' });
+        } else {
+            console.log('❌ Socket not connected');
+        }
+    }
+    </script>
 </body>
 </html> 

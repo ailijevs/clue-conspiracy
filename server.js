@@ -221,12 +221,24 @@ class ClueConspiracyGame {
     if (this.players.has(socketId)) {
       const player = this.players.get(socketId);
       console.log(`🔌 Player ${player.name} left game ${this.id}`);
+      
+      // Handle critical disconnections first
+      if (this.phase !== 'lobby') {
+        this.handleCriticalPlayerDisconnection(socketId);
+      }
+      
       this.players.delete(socketId);
       this.playerCount = this.players.size;
       
-      // If game is in progress, handle disconnection
+      // If game is in progress and becomes empty, end it
       if (this.phase !== 'lobby' && this.playerCount === 0) {
         this.endGame('disconnection');
+      }
+      
+      // If too few players remain, end the game
+      if (this.phase !== 'lobby' && this.playerCount < 4) {
+        console.log('🚨 Too few players remaining - ending game');
+        this.endGame('insufficient_players');
       }
     }
   }
@@ -261,6 +273,13 @@ class ClueConspiracyGame {
       console.log(`🤫 Conspiracy setup phase starting`);
     }
     
+    this.addToGameLog('game_started', 'System', {
+      playerCount: this.playerCount,
+      plotLocation: this.plotLocation,
+      plotWeapon: this.plotWeapon,
+      firstScout: this.players.get(this.currentScout).name
+    });
+    
     return true;
   }
 
@@ -290,65 +309,69 @@ class ClueConspiracyGame {
   }
 
   setupGameBoard() {
-    console.log(`🗺️ Setting up game board for ${this.playerCount} players`);
+    console.log('🏖️ Setting up game board...');
     
-    // Step 1: Create and shuffle location clue cards
-    const locationClues = shuffleArray([...LOCATIONS]);
+    // Create clue decks
+    const locationClues = LOCATIONS.map(loc => createClueCard('location', loc));
+    const weaponClues = WEAPONS.map(weapon => createClueCard('weapon', weapon));
     
-    // Step 2: Set plot location (first card goes facedown on board)
-    this.plotLocation = locationClues[0];
+    // Shuffle location clues and set plot + safe location
+    const shuffledLocationClues = shuffleArray(locationClues);
     
-    // Step 3: Set safe location (second card goes faceup near board)
-    this.safeLocation = locationClues[1];
+    // First card is plot location (face down)
+    this.plotLocation = shuffledLocationClues[0].content;
     
-    // Step 4: Create remaining location clue cards
-    const remainingLocationClues = [];
-    for (let i = 2; i < locationClues.length; i++) {
-      remainingLocationClues.push(createClueCard('location', locationClues[i]));
-    }
+    // Second card is safe location (face up)
+    this.safeLocation = shuffledLocationClues[1].content;
+    console.log(`🛡️ Safe location: ${this.safeLocation}`);
     
-    // Step 5: Add instant disarm and no clue to location pile
-    remainingLocationClues.push(createClueCard('instant_disarm'));
-    remainingLocationClues.push(createClueCard('no_clue'));
+    // Remaining location clues for board (7 locations need clues)
+    const remainingLocationClues = shuffledLocationClues.slice(2);
     
-    // Step 6: Shuffle location clue cards and distribute one to each location
-    const shuffledLocationClues = shuffleArray(remainingLocationClues);
+    // Add instant disarms and no clue cards to fill 9 slots total
+    const instantDisarms = Array(2).fill(null).map(() => createClueCard('instant_disarm'));
+    const noClues = Array(1).fill(null).map(() => createClueCard('no_clue'));
+    const allLocationClues = [...remainingLocationClues, ...instantDisarms, ...noClues];
     
-    // Step 7: Create weapon clue cards
-    const weaponClues = shuffleArray([...WEAPONS]);
-    this.plotWeapon = weaponClues[0]; // First weapon is the plot weapon
+    // Shuffle weapon clues and set plot weapon
+    const shuffledWeaponClues = shuffleArray(weaponClues);
+    this.plotWeapon = shuffledWeaponClues[0].content;
     
-    const weaponClueCards = [];
-    for (let i = 1; i < weaponClues.length; i++) {
-      weaponClueCards.push(createClueCard('weapon', weaponClues[i]));
-    }
+    // Remaining weapon clues for board
+    const remainingWeaponClues = shuffledWeaponClues.slice(1);
+    const moreInstantDisarms = Array(2).fill(null).map(() => createClueCard('instant_disarm'));
+    const moreNoClues = Array(1).fill(null).map(() => createClueCard('no_clue'));
+    const allWeaponClues = [...remainingWeaponClues, ...moreInstantDisarms, ...moreNoClues];
     
-    // Step 8: Add instant disarms and no clue cards to weapon pile
-    weaponClueCards.push(createClueCard('instant_disarm'));
-    weaponClueCards.push(createClueCard('no_clue'));
+    // Shuffle the clue arrays to ensure random distribution
+    const shuffledLocationClueCards = shuffleArray(allLocationClues);
+    const shuffledWeaponClueCards = shuffleArray(allWeaponClues);
     
-    // Step 9: Shuffle weapon clue cards
-    const shuffledWeaponClues = shuffleArray(weaponClueCards);
-    
-    // Step 10: Place clues and traps at each of the 9 locations
-    LOCATIONS.forEach((location, index) => {
+    // Place clues on locations (excluding safe location)
+    const boardLocations = LOCATIONS.filter(loc => loc !== this.safeLocation);
+    boardLocations.forEach((location, index) => {
       const locationData = this.locations.get(location);
       
-      // Each location gets exactly 2 clue cards (1 from each pile)
-      if (index < shuffledLocationClues.length) {
-        locationData.clues.push(shuffledLocationClues[index]);
-      }
-      if (index < shuffledWeaponClues.length) {
-        locationData.clues.push(shuffledWeaponClues[index]);
-      }
+      // Add one location clue and one weapon clue to each location
+      if (shuffledLocationClueCards[index]) locationData.clues.push(shuffledLocationClueCards[index]);
+      if (shuffledWeaponClueCards[index]) locationData.clues.push(shuffledWeaponClueCards[index]);
       
-      // Add trap tile to each location
+      // Add trap
       locationData.trap = createTrapTile(this.playerCount);
     });
     
+    // Safe location gets no trap but can have clues for first mission
+    const safeLocationData = this.locations.get(this.safeLocation);
+    safeLocationData.trap = null;
+    if (shuffledLocationClueCards[8]) safeLocationData.clues.push(shuffledLocationClueCards[8]);
+    if (shuffledWeaponClueCards[8]) safeLocationData.clues.push(shuffledWeaponClueCards[8]);
+    
+    // Initialize trap counter correctly
+    this.trapsRemaining = boardLocations.length; // 8 locations with traps (9 total - 1 safe)
+    
     console.log(`🎯 Plot: ${this.plotLocation} with ${this.plotWeapon}`);
-    console.log(`✅ Safe location: ${this.safeLocation}`);
-    console.log(`🃏 Board setup complete with ${this.trapsRemaining} traps`);
+    console.log(`🛡️ Safe location: ${this.safeLocation}`);
+    console.log(`🔢 Traps placed: ${this.trapsRemaining}`);
   }
 
   dealInitialSupplyCards() {
@@ -377,6 +400,7 @@ class ClueConspiracyGame {
     this.players.forEach(player => {
       player.supplyCards = [];
       for (let i = 0; i < cardsPerPlayer; i++) {
+        this.ensureSupplyAvailable();
         if (this.supplyDeck.length > 0) {
           player.supplyCards.push(this.supplyDeck.pop());
         }
@@ -456,6 +480,23 @@ class ClueConspiracyGame {
 
   // Game action methods
   proposeTeam(scoutId, bodyguardId, teamMemberIds, locationName) {
+    // Input validation
+    if (!scoutId || typeof scoutId !== 'string') {
+      throw new Error('Invalid scout ID');
+    }
+    
+    if (!bodyguardId || typeof bodyguardId !== 'string') {
+      throw new Error('Invalid bodyguard ID');
+    }
+    
+    if (!Array.isArray(teamMemberIds)) {
+      throw new Error('Team member IDs must be an array');
+    }
+    
+    if (!locationName || typeof locationName !== 'string') {
+      throw new Error('Invalid location name');
+    }
+    
     if (this.phase !== 'round_choose_team') {
       throw new Error('Game must be in team selection phase');
     }
@@ -464,38 +505,22 @@ class ClueConspiracyGame {
       throw new Error('Only the current scout can propose a team');
     }
     
-    // Validate bodyguard selection
-    if (!this.players.has(bodyguardId)) {
-      throw new Error('Invalid bodyguard selection');
+    // Validate all player IDs exist
+    const allPlayerIds = [scoutId, bodyguardId, ...teamMemberIds];
+    const invalidPlayers = allPlayerIds.filter(id => !this.players.has(id));
+    if (invalidPlayers.length > 0) {
+      throw new Error(`Invalid player IDs: ${invalidPlayers.join(', ')}`);
     }
     
-    // Scout cannot be bodyguard
-    if (bodyguardId === scoutId) {
-      throw new Error('Scout cannot be the bodyguard');
-    }
-    
-    // Validate bodyguard selection based on player count
-    if (this.playerCount === 4) {
-      // 4-player rule: Bodyguard cannot be bodyguard twice in a row
-      if (bodyguardId === this.previousRoles.bodyguard) {
-        throw new Error('Previous bodyguard cannot be bodyguard again');
-      }
-    } else {
-      // 5+ player rule: Previous bodyguard cannot be bodyguard again
-      if (bodyguardId === this.previousRoles.bodyguard) {
-        throw new Error('Previous bodyguard cannot be bodyguard again');
-      }
+    // Check for duplicate team members
+    const uniqueTeamMembers = new Set(teamMemberIds);
+    if (uniqueTeamMembers.size !== teamMemberIds.length) {
+      throw new Error('Duplicate team members not allowed');
     }
     
     // Validate location
     if (!this.locations.has(locationName)) {
       throw new Error('Invalid location');
-    }
-    
-    // Validate team members
-    const invalidMembers = teamMemberIds.filter(id => !this.players.has(id));
-    if (invalidMembers.length > 0) {
-      throw new Error('Invalid team member selection');
     }
     
     // Create team (scout + bodyguard + additional members)
@@ -520,6 +545,14 @@ class ClueConspiracyGame {
       bodyguard: this.players.get(bodyguardId)?.name,
       location: locationName,
       teamSize: this.proposedMission.teamMembers.length
+    });
+    
+    this.addToGameLog('team_proposed', this.players.get(scoutId).name, {
+      bodyguard: this.players.get(bodyguardId).name,
+      location: locationName,
+      teamMembers: teamMembers.map(id => this.players.get(id).name),
+      teamSize: teamMembers.length,
+      round: this.round
     });
     
     this.phase = 'round_voting';
@@ -556,7 +589,19 @@ class ClueConspiracyGame {
         this.resolveVote();
     }
     
-    this.setActivity(playerId, 'vote_cast', { vote });
+    this.setActivity(playerId, 'vote_cast', {
+      vote: vote,
+      location: this.proposedMission?.location,
+      votesReceived: this.votes.size,
+      totalPlayers: this.playerCount
+    });
+    
+    this.addToGameLog('vote_cast', this.players.get(playerId).name, {
+      vote: vote,
+      location: this.proposedMission?.location,
+      votesReceived: this.votes.size,
+      totalPlayers: this.playerCount
+    });
     
     return true;
   }
@@ -567,6 +612,9 @@ class ClueConspiracyGame {
     
     console.log(`🗳️ Vote results: ${approveVotes} approve, ${rejectVotes} reject`);
     
+    // Clear votes immediately to prevent issues
+    this.votes.clear();
+    
     if (this.phase === 'final_accusation_voting') {
         this.resolveFinalVote();
         return;
@@ -574,11 +622,21 @@ class ClueConspiracyGame {
     
     if (approveVotes > rejectVotes) {
         // Vote passes
-        console.log('✅ Vote PASSED');
+        console.log('✅ Vote PASSED - Mission approved!');
+        this.addToGameLog('vote_passed', 'System', { 
+            approveVotes, 
+            rejectVotes, 
+            location: this.proposedMission.location 
+        });
         this.executeApprovedMission();
     } else {
         // Vote fails
-        console.log('❌ Vote FAILED');
+        console.log('❌ Vote FAILED - Mission rejected!');
+        this.addToGameLog('vote_failed', 'System', { 
+            approveVotes, 
+            rejectVotes, 
+            stormTracker: this.stormTracker + 1 
+        });
         this.handleFailedVote();
     }
   }
@@ -616,26 +674,31 @@ class ClueConspiracyGame {
   handleFailedVote() {
     this.stormTracker++;
     
+    console.log(`⛈️ Vote failed! Storm tracker: ${this.stormTracker}/3`);
+    
     if (this.stormTracker >= 3) {
-      // Mr. Coral takes damage
-      this.coralHealth--;
-      this.stormTracker = 0;
-      
-      console.log(`⛈️ Three failed votes! Mr. Coral takes damage (${this.coralHealth}/3)`);
-      
-      if (this.coralHealth <= 0) {
-        this.handleCoralDeath();
-        return;
-      }
+        // Mr. Coral takes damage
+        this.coralHealth--;
+        this.stormTracker = 0;
+        
+        console.log(`💔 Three failed votes! Mr. Coral takes damage (${this.coralHealth}/3)`);
+        
+        if (this.coralHealth <= 0) {
+            this.handleCoralDeath();
+            return;
+        }
     }
+    
+    // Clear current mission and votes
+    this.proposedMission = null;
+    this.votes.clear();
+    this.currentBodyguard = null;
     
     // Move scout to next player
     this.rotateScout();
-    this.proposedMission = null;
-    this.votes.clear();
     
     this.phase = 'round_choose_team';
-    console.log(`❌ Vote failed (${this.stormTracker}/3). New scout: ${this.players.get(this.currentScout).name}`);
+    console.log(`🎯 New round begins. Scout: ${this.players.get(this.currentScout).name}`);
   }
 
   checkPlot() {
@@ -643,13 +706,21 @@ class ClueConspiracyGame {
       throw new Error('Game must be in plot check phase');
     }
     
+    // This should be called after everyone asks "Has the plot been activated?"
     const plotActivated = (
-      this.coralHealth < 3 && // Mr. Coral has taken damage
-      this.proposedMission.location === this.plotLocation && // Correct location
-      this.currentBodyguard === this.ringleaderId // Ringleader is bodyguard
+      this.coralHealth < 3 && // Mr. Coral has taken at least one damage
+      this.proposedMission.location === this.plotLocation && // Current location matches plot
+      this.currentBodyguard === this.ringleaderId // Ringleader is the bodyguard
     );
     
+    console.log(`🕵️ Plot check: Health=${this.coralHealth < 3}, Location=${this.proposedMission.location === this.plotLocation}, Bodyguard=${this.currentBodyguard === this.ringleaderId}`);
+    
     if (plotActivated) {
+      this.addToGameLog('plot_activated', 'System', {
+        location: this.plotLocation,
+        weapon: this.plotWeapon,
+        ringleader: this.players.get(this.ringleaderId).name
+      });
       this.endGame('conspiracy_plot');
       return { activated: true };
     }
@@ -659,24 +730,60 @@ class ClueConspiracyGame {
   }
 
   submitSupplyCards(playerId, cardIds) {
+    // Input validation
+    if (!playerId || typeof playerId !== 'string') {
+      throw new Error('Invalid player ID');
+    }
+    
+    if (!Array.isArray(cardIds)) {
+      throw new Error('Card IDs must be an array');
+    }
+    
+    if (cardIds.length === 0) {
+      throw new Error('Must submit at least one card');
+    }
+    
     if (this.phase !== 'round_disarm_traps') {
       throw new Error('Game must be in trap disarming phase');
     }
     
-    if (!this.proposedMission.teamMembers.includes(playerId)) {
+    if (!this.proposedMission || !this.proposedMission.teamMembers.includes(playerId)) {
       throw new Error('Only team members can submit supply cards');
     }
     
     const player = this.players.get(playerId);
-    const submittedCards = [];
+    if (!player) {
+      throw new Error('Player not found');
+    }
     
-    // Remove cards from player's hand
+    // Check for duplicate submission
+    if (this.supplyContributions.has(playerId)) {
+      throw new Error('Player has already submitted cards');
+    }
+    
+    // Validate card ownership and IDs
+    const submittedCards = [];
+    const invalidCards = [];
+    
     cardIds.forEach(cardId => {
+      if (!cardId || typeof cardId !== 'string') {
+        invalidCards.push(cardId);
+        return;
+      }
+      
       const cardIndex = player.supplyCards.findIndex(card => card.id === cardId);
-      if (cardIndex !== -1) {
+      if (cardIndex === -1) {
+        invalidCards.push(cardId);
+      } else {
         submittedCards.push(player.supplyCards.splice(cardIndex, 1)[0]);
       }
     });
+    
+    if (invalidCards.length > 0) {
+      // Restore removed cards
+      player.supplyCards.push(...submittedCards);
+      throw new Error(`Invalid card IDs: ${invalidCards.join(', ')}`);
+    }
     
     this.supplyContributions.set(playerId, submittedCards);
     
@@ -686,46 +793,90 @@ class ClueConspiracyGame {
     );
     
     if (allSubmitted) {
-      this.resolveTrapDisarming();
+      // ENHANCED: Return the trap disarm result for broadcasting
+      const result = this.resolveTrapDisarming();
+      this.addToGameLog('supply_contributed', player.name, {
+        location: this.proposedMission.location,
+        cardsSubmitted: submittedCards.map(card => ({ value: card.value, suit: card.suit })),
+        totalContribution: submittedCards.length,
+        teamMembersSubmitted: this.supplyContributions.size,
+        totalTeamMembers: this.proposedMission.teamMembers.length
+      });
+      return { 
+        submitted: true, 
+        allSubmitted: true, 
+        disarmResult: result 
+      };
     }
     
-    return true;
+    // ✅ NEW: Broadcast individual contribution
+    const progressUpdate = {
+        playerName: player.name,
+        submitted: this.supplyContributions.size,
+        total: this.proposedMission.teamMembers.length,
+        phase: this.phase
+    };
+    
+    // Broadcast to all players so non-team members can see progress
+    // This would be added to the socket handler
+    
+    return { submitted: true, allSubmitted: false };
   }
 
   resolveTrapDisarming() {
     const locationData = this.locations.get(this.proposedMission.location);
     const trap = locationData.trap;
     
-    // Calculate total value
+    // Calculate total value with detailed breakdown
     let totalValue = 0;
     const allSubmittedCards = [];
+    const contributionBreakdown = {};
     
     this.supplyContributions.forEach((cards, playerId) => {
       allSubmittedCards.push(...cards);
+      contributionBreakdown[playerId] = {
+        playerName: this.players.get(playerId).name,
+        cards: cards.map(card => ({ value: card.value, suit: card.suit })),
+        contribution: 0
+      };
     });
     
     // For 4-player games, add random card from deck
     if (this.playerCount === 4 && this.supplyDeck.length > 0) {
-      allSubmittedCards.push(this.supplyDeck.pop());
+      this.ensureSupplyAvailable();
+      const randomCard = this.supplyDeck.pop();
+      allSubmittedCards.push(randomCard);
+      contributionBreakdown['deck'] = {
+        playerName: 'Random Draw',
+        cards: [{ value: randomCard.value, suit: randomCard.suit }],
+        contribution: 0
+      };
     }
     
-    // Calculate points based on trap type (Triangle/Circle only)
+    // Calculate points with detailed tracking
     allSubmittedCards.forEach(card => {
+      let cardValue = 0;
       if (card.value === 1) {
-        // Value 1 cards always count positively
-        totalValue += 1;
+        cardValue = 1; // Value 1 cards always count positively
       } else if (card.value === 2) {
-        // Value 2 cards depend on suit matching
         if (trap.suit === 'Trip Wire') {
-          // Trip Wire accepts both Triangle and Circle
-          totalValue += 2;
+          cardValue = 2; // Trip Wire accepts both Triangle and Circle
         } else if (card.suit === trap.suit) {
-          // Suit matches (Triangle or Circle)
-          totalValue += 2;
+          cardValue = 2; // Suit matches
         } else {
-          // Suit doesn't match - subtract points
-          totalValue -= 2;
+          cardValue = -2; // Suit doesn't match - subtract points
         }
+      }
+      totalValue += cardValue;
+      
+      // Track contribution by player
+      const contributor = Object.keys(contributionBreakdown).find(playerId => {
+        return contributionBreakdown[playerId].cards.some(c => 
+          c.value === card.value && c.suit === card.suit
+        );
+      });
+      if (contributor) {
+        contributionBreakdown[contributor].contribution += cardValue;
       }
     });
     
@@ -733,45 +884,81 @@ class ClueConspiracyGame {
     this.supplyDiscard.push(...allSubmittedCards);
     
     const success = totalValue >= trap.value;
+    const previousTrapsRemaining = this.trapsRemaining;
+    
+    // Update game state
+    locationData.trap = null;
+    locationData.visited = true;
+    this.trapsRemaining--;
     
     if (success) {
-      // Trap disarmed
-      locationData.trap = null;
-      locationData.visited = true;
-      this.trapsRemaining--;
-      
       console.log(`✅ Trap disarmed at ${this.proposedMission.location} (${totalValue}/${trap.value})`);
       
       // Check if all traps are gone (Friends win condition)
       if (this.trapsRemaining === 0) {
         this.endGame('friends_traps');
-        return { success: true, totalValue, requiredValue: trap.value, gameEnded: true };
+        return { 
+          success: true, 
+          totalValue, 
+          requiredValue: trap.value, 
+          location: this.proposedMission.location,
+          contributionBreakdown,
+          trapsRemaining: this.trapsRemaining,
+          gameEnded: true 
+        };
       }
     } else {
-      // Trap not disarmed - Mr. Coral takes damage
+      // Mr. Coral takes damage
       this.coralHealth--;
-      
       console.log(`❌ Trap not disarmed at ${this.proposedMission.location} (${totalValue}/${trap.value}). Mr. Coral takes damage!`);
-      
-      // Remove trap anyway (rule: trap is removed whether disarmed or not)
-      locationData.trap = null;
-      locationData.visited = true;
-      this.trapsRemaining--;
       
       if (this.coralHealth <= 0) {
         this.handleCoralDeath();
-        return { success: false, totalValue, requiredValue: trap.value, coralDied: true };
+        return { 
+          success: false, 
+          totalValue, 
+          requiredValue: trap.value, 
+          location: this.proposedMission.location,
+          contributionBreakdown,
+          trapsRemaining: this.trapsRemaining,
+          coralDied: true 
+        };
       }
     }
     
-    // Clear contributions
+    // Clear contributions and advance phase
     this.supplyContributions.clear();
-    
     this.phase = 'round_collect_clues';
-    return { success, totalValue, requiredValue: trap.value };
+    
+    // Add game log entry
+    this.addToGameLog('trap_result', 'System', {
+      success,
+      location: this.proposedMission.location,
+      totalValue,
+      requiredValue: trap.value,
+      trapsRemaining: this.trapsRemaining
+    });
+    
+    return { 
+      success, 
+      totalValue, 
+      requiredValue: trap.value,
+      location: this.proposedMission.location,
+      contributionBreakdown,
+      trapsRemaining: this.trapsRemaining
+    };
   }
 
-  collectClues(bodyguardId, weaponClaim, locationClaim) {
+  collectClues(bodyguardId, claimData = {}) {
+    // Input validation
+    if (!bodyguardId || typeof bodyguardId !== 'string') {
+      throw new Error('Invalid bodyguard ID');
+    }
+    
+    if (claimData && typeof claimData !== 'object') {
+      throw new Error('Claim data must be an object');
+    }
+    
     if (this.phase !== 'round_collect_clues') {
       throw new Error('Game must be in clue collection phase');
     }
@@ -780,66 +967,184 @@ class ClueConspiracyGame {
       throw new Error('Only the bodyguard can collect clues');
     }
     
-    const locationData = this.locations.get(this.proposedMission.location);
     const player = this.players.get(bodyguardId);
+    if (!player) {
+      throw new Error('Bodyguard player not found');
+    }
+    
+    // Validate claim data structure
+    if (claimData.weaponClaims && !Array.isArray(claimData.weaponClaims)) {
+      throw new Error('Weapon claims must be an array');
+    }
+    
+    if (claimData.locationClaims && !Array.isArray(claimData.locationClaims)) {
+      throw new Error('Location claims must be an array');
+    }
+    
+    // Store the actual clues found for later verification
+    const actualClues = [...this.locations.get(this.proposedMission.location).clues];
     
     // Add clues to player's hand
-    player.clueCards.push(...locationData.clues);
+    player.clueCards.push(...this.locations.get(this.proposedMission.location).clues);
     
-    // Update claims
-    if (weaponClaim) {
-      player.claimedClues.weapons.push(weaponClaim);
+    // Process claims with validation
+    const claimResults = {
+      weaponClaims: [],
+      locationClaims: [],
+      instantDisarms: 0,
+      noCluesFound: 0
+    };
+    
+    if (claimData.weaponClaims) {
+      claimData.weaponClaims.forEach(weapon => {
+        player.claimedClues.weapons.push(weapon);
+        claimResults.weaponClaims.push(weapon);
+      });
     }
-    if (locationClaim) {
-      player.claimedClues.locations.push(locationClaim);
+    
+    if (claimData.locationClaims) {
+      claimData.locationClaims.forEach(location => {
+        player.claimedClues.locations.push(location);
+        claimResults.locationClaims.push(location);
+      });
     }
+    
+    // Count special cards
+    actualClues.forEach(clue => {
+      if (clue.cardType === 'instant_disarm') {
+        claimResults.instantDisarms++;
+      } else if (clue.cardType === 'no_clue') {
+        claimResults.noCluesFound++;
+      }
+    });
     
     // Clear clues from location
-    locationData.clues = [];
+    this.locations.get(this.proposedMission.location).clues = [];
     
     this.phase = 'round_supply_distribution';
-    console.log(`🔍 Clues collected by ${player.name}`);
-    return true;
+    
+    // Add game log entry
+    this.addToGameLog('clues_collected', player.name, {
+      location: this.proposedMission.location,
+      claimResults
+    });
+    
+    console.log(`🔍 Clues collected by ${player.name} at ${this.proposedMission.location}`);
+    
+    return {
+      success: true,
+      bodyguardName: player.name,
+      location: this.proposedMission.location,
+      claimResults
+    };
   }
 
-  distributeSupplies(scoutId) {
+  prepareSupplyDistribution(scoutId) {
     if (this.phase !== 'round_supply_distribution') {
       throw new Error('Game must be in supply distribution phase');
     }
     
     if (this.currentScout !== scoutId) {
-      throw new Error('Only the scout can distribute supplies');
+      throw new Error('Only the scout can prepare supply distribution');
     }
     
-    const locationData = this.locations.get(this.proposedMission.location);
-    const cardsToDistribute = locationData.playersPresent.length; // Include Mr. Coral
+    // Draw cards equal to number of pawns at location (team + Mr. Coral)
+    const pawnCount = this.proposedMission.teamMembers.length + 1; // +1 for Mr. Coral
     
-    // Draw cards from deck
     const drawnCards = [];
-    for (let i = 0; i < cardsToDistribute && this.supplyDeck.length > 0; i++) {
-      drawnCards.push(this.supplyDeck.pop());
+    for (let i = 0; i < pawnCount; i++) {
+      this.ensureSupplyAvailable();
+      if (this.supplyDeck.length > 0) {
+        drawnCards.push(this.supplyDeck.pop());
+      }
     }
     
-    // Distribute randomly to team members (not to Mr. Coral)
-    const teamMembers = this.proposedMission.teamMembers;
-    drawnCards.forEach(card => {
-      const randomMember = teamMembers[Math.floor(Math.random() * teamMembers.length)];
-      const player = this.players.get(randomMember);
+    // Store drawn cards for distribution
+    this.pendingSupplyDistribution = {
+      drawnCards,
+      teamMembers: this.proposedMission.teamMembers,
+      distributed: false
+    };
+    
+    console.log(`🎒 Drew ${drawnCards.length} supply cards for distribution at ${this.proposedMission.location}`);
+    
+    return {
+      drawnCards: drawnCards.map(card => ({ id: card.id, value: card.value, suit: card.suit })),
+      teamMembers: this.proposedMission.teamMembers.map(id => ({
+        id,
+        name: this.players.get(id).name,
+        currentCards: this.players.get(id).supplyCards.length,
+        maxCards: this.playerCount === 4 ? 4 : 3
+      }))
+    };
+  }
+
+  distributeSupplies(scoutId) {
+    // For backward compatibility, auto-distribute randomly
+    const result = this.prepareSupplyDistribution(scoutId);
+    
+    // Auto-distribute cards randomly to team members
+    const { drawnCards, teamMembers } = this.pendingSupplyDistribution;
+    const distribution = [];
+    
+    drawnCards.forEach((card, index) => {
+      const targetPlayer = teamMembers[index % teamMembers.length];
+      distribution.push({ cardId: card.id, playerId: targetPlayer });
+    });
+    
+    return this.executeSupplyDistribution(scoutId, distribution);
+  }
+
+  executeSupplyDistribution(scoutId, distribution) {
+    if (!this.pendingSupplyDistribution || this.pendingSupplyDistribution.distributed) {
+      throw new Error('No pending distribution or already completed');
+    }
+    
+    if (this.currentScout !== scoutId) {
+      throw new Error('Only the scout can execute distribution');
+    }
+    
+    // Validate distribution
+    const { drawnCards, teamMembers } = this.pendingSupplyDistribution;
+    
+    // Apply distribution
+    distribution.forEach(({ cardId, playerId }) => {
+      const card = drawnCards.find(c => c.id === cardId);
+      const player = this.players.get(playerId);
       
-      // Check hand limit
-      const maxCards = this.playerCount === 4 ? 4 : 3;
-      if (player.supplyCards.length < maxCards) {
-        player.supplyCards.push(card);
-      } else {
-        this.supplyDiscard.push(card);
+      if (card && player && teamMembers.includes(playerId)) {
+        const maxCards = this.playerCount === 4 ? 4 : 3;
+        this.ensureSupplyAvailable();
+        if (player.supplyCards.length < maxCards) {
+          player.supplyCards.push(card);
+          // Remove from drawn cards
+          const cardIndex = drawnCards.findIndex(c => c.id === cardId);
+          if (cardIndex !== -1) {
+            drawnCards.splice(cardIndex, 1);
+          }
+        }
       }
     });
     
-    // End round
+    // Discard any remaining cards
+    this.supplyDiscard.push(...drawnCards);
+    
+    // Non-team members draw 1 card each
+    this.players.forEach((player, playerId) => {
+      if (!teamMembers.includes(playerId)) {
+        const maxCards = this.playerCount === 4 ? 4 : 3;
+        this.ensureSupplyAvailable();
+        if (player.supplyCards.length < maxCards && this.supplyDeck.length > 0) {
+          player.supplyCards.push(this.supplyDeck.pop());
+        }
+      }
+    });
+    
+    this.pendingSupplyDistribution.distributed = true;
     this.endRound();
     
-    console.log(`🎒 Supplies distributed`);
-    return true;
+    console.log(`🎒 Supply distribution completed by ${this.players.get(scoutId).name}`);
+    return { success: true };
   }
 
   endRound() {
@@ -870,6 +1175,14 @@ class ClueConspiracyGame {
     this.phase = 'round_choose_team';
     
     console.log(`🔄 Round ${this.round} begins. Scout: ${this.players.get(this.currentScout).name}`);
+    
+    this.addToGameLog('round_ended', 'System', {
+      completedRound: this.round - 1,
+      newRound: this.round,
+      newScout: this.players.get(this.currentScout).name,
+      trapsRemaining: this.trapsRemaining,
+      coralHealth: this.coralHealth
+    });
   }
 
   rotateScout() {
@@ -877,22 +1190,41 @@ class ClueConspiracyGame {
     const currentIndex = playerIds.indexOf(this.currentScout);
     let nextIndex = (currentIndex + 1) % playerIds.length;
     
-    // Apply role restrictions based on player count
-    if (this.playerCount === 4) {
-      // 4-player rule: Skip if player was just bodyguard (scout can be bodyguard next round)
-      if (playerIds[nextIndex] === this.previousRoles.bodyguard) {
-        nextIndex = (nextIndex + 1) % playerIds.length;
+    // Apply official rules: previous scout or bodyguard cannot be scout/bodyguard next round
+    const previousScout = this.previousRoles.scout;
+    const previousBodyguard = this.previousRoles.bodyguard;
+    
+    let attempts = 0;
+    const maxAttempts = playerIds.length * 2; // Prevent infinite loops
+    
+    while (attempts < maxAttempts) {
+      const candidate = playerIds[nextIndex];
+      
+      // In games with 4-5 players, be more flexible with restrictions
+      if (this.playerCount <= 5) {
+        // Only avoid immediate previous scout
+        if (candidate !== previousScout) {
+          this.currentScout = candidate;
+          console.log(`🎯 Scout rotated to: ${this.players.get(this.currentScout).name}`);
+          return;
+        }
+      } else {
+        // Larger games: avoid both previous scout and bodyguard
+        if (candidate !== previousScout && candidate !== previousBodyguard) {
+          this.currentScout = candidate;
+          console.log(`🎯 Scout rotated to: ${this.players.get(this.currentScout).name}`);
+          return;
+        }
       }
-    } else {
-      // 5+ player rule: Skip if player was just bodyguard
-      if (playerIds[nextIndex] === this.previousRoles.bodyguard) {
-        nextIndex = (nextIndex + 1) % playerIds.length;
-      }
+      
+      nextIndex = (nextIndex + 1) % playerIds.length;
+      attempts++;
     }
     
-    this.currentScout = playerIds[nextIndex];
-    this.currentBodyguard = null;
-    console.log(`🔄 Scout rotated to: ${this.players.get(this.currentScout).name}`);
+    // Fallback: if we can't find eligible player, use next in rotation
+    console.warn('⚠️ Could not find eligible scout with restrictions - using next player');
+    this.currentScout = playerIds[(currentIndex + 1) % playerIds.length];
+    console.log(`🎯 Scout (fallback) rotated to: ${this.players.get(this.currentScout).name}`);
   }
 
   handleCoralDeath() {
@@ -941,20 +1273,29 @@ class ClueConspiracyGame {
       this.distributeFinalClues();
       this.phase = 'final_accusation';
       
-      // Start 5-minute timer (handled client-side)
+      // Start SERVER-SIDE 5-minute timer
       this.finalAccusationStartTime = Date.now();
+      
+      if (this.finalAccusationTimer) {
+        clearTimeout(this.finalAccusationTimer);
+      }
+      
+      this.finalAccusationTimer = setTimeout(() => {
+        console.log('⏰ Final accusation time limit reached - Conspiracy wins by default');
+        this.endGame('time_limit');
+      }, 5 * 60 * 1000); // 5 minutes
+      
+      console.log('⏰ Final accusation phase started - 5 minute timer active');
       
     } else {
       // Vote fails
       this.finalAccusationVoteCount++;
       
       if (this.finalAccusationVoteCount >= 3) {
-        // Three failed votes - Conspiracy wins automatically
         this.endGame('conspiracy_votes');
         return;
       }
       
-      // Try again with next scout
       this.rotateScout();
       this.proposedMission = null;
       this.votes.clear();
@@ -989,16 +1330,44 @@ class ClueConspiracyGame {
   }
 
   makeFinalAccusation(who, where, what) {
+    // Input validation
+    if (!who || typeof who !== 'string' || who.trim() === '') {
+      throw new Error('WHO must be a valid character name');
+    }
+    
+    if (!where || typeof where !== 'string' || where.trim() === '') {
+      throw new Error('WHERE must be a valid location name');
+    }
+    
+    if (!what || typeof what !== 'string' || what.trim() === '') {
+      throw new Error('WHAT must be a valid weapon name');
+    }
+    
     if (this.phase !== 'final_accusation') {
       throw new Error('Game must be in final accusation phase');
     }
     
+    // Validate accusation values against game data
+    const validCharacters = Array.from(this.players.values()).map(p => p.character);
+    if (!validCharacters.includes(who.trim())) {
+      throw new Error(`Invalid character: ${who}. Must be one of: ${validCharacters.join(', ')}`);
+    }
+    
+    const validLocations = Array.from(this.locations.keys());
+    if (!validLocations.includes(where.trim())) {
+      throw new Error(`Invalid location: ${where}. Must be one of: ${validLocations.join(', ')}`);
+    }
+    
+    const validWeapons = ['Rope', 'Knife', 'Candlestick', 'Revolver', 'Lead Pipe', 'Wrench'];
+    if (!validWeapons.includes(what.trim())) {
+      throw new Error(`Invalid weapon: ${what}. Must be one of: ${validWeapons.join(', ')}`);
+    }
+    
+    // Check if accusation is correct (rest of existing logic)
     const ringleaderCharacter = this.players.get(this.ringleaderId).character;
-    const correct = (
-      who === ringleaderCharacter &&
-      where === this.plotLocation &&
-      what === this.plotWeapon
-    );
+    const correct = (who === ringleaderCharacter && where === this.plotLocation && what === this.plotWeapon);
+    
+    this.addToGameLog('final_accusation', 'System', { who, where, what, correct });
     
     if (correct) {
       this.endGame('friends_accusation');
@@ -1006,11 +1375,11 @@ class ClueConspiracyGame {
       this.endGame('conspiracy_accusation');
     }
     
-    return { 
-      correct, 
-      actualWho: ringleaderCharacter, 
-      actualWhere: this.plotLocation, 
-      actualWhat: this.plotWeapon 
+    return {
+      correct,
+      actualWho: ringleaderCharacter,
+      actualWhere: this.plotLocation,
+      actualWhat: this.plotWeapon
     };
   }
 
@@ -1217,7 +1586,156 @@ class ClueConspiracyGame {
     this.supplyContributions.clear();
     this.phase = 'round_collect_clues';
     
+    this.addToGameLog('instant_disarm_used', this.players.get(playerId).name, {
+      location: this.proposedMission.location,
+      trapsRemaining: this.trapsRemaining,
+      autoDisarmed: true
+    });
+    
     return { success: true, instantDisarm: true };
+  }
+
+  handleCriticalPlayerDisconnection(disconnectedPlayerId) {
+    console.log(`🚨 Critical player disconnected: ${this.players.get(disconnectedPlayerId)?.name}`);
+    
+    // If scout disconnects during team selection
+    if (this.phase === 'round_choose_team' && this.currentScout === disconnectedPlayerId) {
+      console.log('🎯 Scout disconnected during team selection - rotating to next scout');
+      this.rotateScout();
+      // Reset any partial selections
+      this.proposedMission = null;
+      this.votes.clear();
+      // Stay in the same phase with new scout
+    }
+    
+    // If bodyguard disconnects during clue collection
+    if (this.phase === 'round_collect_clues' && this.currentBodyguard === disconnectedPlayerId) {
+      console.log('🛡️ Bodyguard disconnected during clue collection - auto-collecting clues');
+      // Auto-collect clues with no claims
+      this.collectClues(disconnectedPlayerId, null, null);
+    }
+    
+    // If scout disconnects during supply distribution
+    if (this.phase === 'round_supply_distribution' && this.currentScout === disconnectedPlayerId) {
+      console.log('🎒 Scout disconnected during supply distribution - auto-distributing');
+      this.distributeSupplies(disconnectedPlayerId);
+    }
+    
+    // If scout disconnects during final accusation setup
+    if (this.phase === 'final_accusation_setup' && this.currentScout === disconnectedPlayerId) {
+      console.log('⚖️ Scout disconnected during final accusation setup - rotating scout');
+      this.rotateScout();
+      // Stay in the same phase with new scout
+    }
+  }
+
+  rejoinGame(socketId, playerName) {
+    // Find if this player was in the game before
+    const existingPlayer = Array.from(this.players.values()).find(p => p.name === playerName);
+    
+    if (existingPlayer && this.phase !== 'lobby') {
+      // Update their socket ID
+      this.players.delete(existingPlayer.id);
+      existingPlayer.id = socketId;
+      this.players.set(socketId, existingPlayer);
+      
+      // Update role references
+      if (this.currentScout === existingPlayer.id) this.currentScout = socketId;
+      if (this.currentBodyguard === existingPlayer.id) this.currentBodyguard = socketId;
+      if (this.ringleaderId === existingPlayer.id) this.ringleaderId = socketId;
+      if (this.accompliceIds.includes(existingPlayer.id)) {
+        const index = this.accompliceIds.indexOf(existingPlayer.id);
+        this.accompliceIds[index] = socketId;
+      }
+      
+      console.log(`✅ Player ${playerName} rejoined game ${this.id}`);
+      return true;
+    }
+    
+    return false;
+  }
+
+  recoverFromError(errorType, details = {}) {
+    console.log(`🔄 Attempting error recovery: ${errorType}`, details);
+    
+    switch (errorType) {
+      case 'invalid_scout':
+        // Find a valid scout
+        const validScouts = Array.from(this.players.keys()).filter(id => 
+          id !== this.previousRoles.scout && id !== this.previousRoles.bodyguard
+        );
+        if (validScouts.length > 0) {
+          this.currentScout = validScouts[0];
+          console.log(`🎯 Emergency scout assignment: ${this.players.get(this.currentScout).name}`);
+        }
+        break;
+        
+      case 'missing_bodyguard':
+        // Clear bodyguard requirement and continue
+        this.currentBodyguard = null;
+        console.log('🛡️ Bodyguard requirement cleared due to error');
+        break;
+        
+      case 'phase_desync':
+        // Reset to a safe phase
+        this.phase = 'round_choose_team';
+        this.votes.clear();
+        this.proposedMission = null;
+        console.log('🔄 Phase reset to team selection due to desync');
+        break;
+    }
+  }
+
+  ensureSupplyAvailable() {
+    // If supply deck is empty but discard pile has cards, reshuffle
+    if (this.supplyDeck.length === 0 && this.supplyDiscard.length > 0) {
+      console.log(`🔄 Supply deck empty - reshuffling ${this.supplyDiscard.length} discarded cards`);
+      this.supplyDeck = shuffleArray([...this.supplyDiscard]);
+      this.supplyDiscard = [];
+    }
+  }
+
+  validateGameState() {
+    // Comprehensive game state validation
+    if (!this.players || this.players.size === 0) {
+      throw new Error('Game has no players');
+    }
+    
+    if (this.playerCount !== this.players.size) {
+      console.warn(`⚠️ Player count mismatch: ${this.playerCount} vs ${this.players.size}`);
+    }
+    
+    if (this.currentScout && !this.players.has(this.currentScout)) {
+      throw new Error('Current scout is not a valid player');
+    }
+    
+    if (this.currentBodyguard && !this.players.has(this.currentBodyguard)) {
+      throw new Error('Current bodyguard is not a valid player');
+    }
+    
+    if (this.coralHealth < 0 || this.coralHealth > 3) {
+      throw new Error(`Invalid coral health: ${this.coralHealth}`);
+    }
+    
+    if (this.trapsRemaining < 0 || this.trapsRemaining > 9) {
+      throw new Error(`Invalid traps remaining: ${this.trapsRemaining}`);
+    }
+  }
+
+  // Enhanced error handling in socket handlers
+  safeExecute(operation, errorContext) {
+    try {
+      this.validateGameState();
+      return operation();
+    } catch (error) {
+      console.error(`❌ Error in ${errorContext}:`, error.message);
+      this.addToGameLog('error', 'System', { 
+        context: errorContext, 
+        error: error.message,
+        timestamp: Date.now()
+      });
+      throw error;
+    }
   }
 }
 
@@ -1236,19 +1754,38 @@ io.on('connection', (socket) => {
       }
       
       const game = games.get(gameId);
+      
+      // Try to rejoin first
+      if (game.rejoinGame(socket.id, playerName)) {
+        socket.join(gameId);
+        socket.emit('joined_game', { gameId, playerId: socket.id });
+        
+        // Send current game state
+        console.log('📡 Sending game state to rejoined player...');
+        io.to(gameId).emit('game_state', game.getPublicGameState());
+        socket.emit('private_state', game.getPrivateGameState(socket.id));
+        
+        console.log(`🔄 Player ${playerName} rejoined game ${gameId}`);
+        return;
+      }
+      
+      // Otherwise try to add as new player
       const success = game.addPlayer(socket.id, playerName);
       
       if (success) {
         socket.join(gameId);
         socket.emit('joined_game', { gameId, playerId: socket.id });
         
-        // Send game state to all players
-        io.to(gameId).emit('game_state', game.getPublicGameState());
+        // ✅ IMPORTANT: Send game state to ALL players after new player joins
+        console.log('📡 Broadcasting updated game state to all players...');
+        const publicState = game.getPublicGameState();
+        console.log('📡 Public state player count:', publicState.playerCount);
+        console.log('📡 Public state players:', publicState.players?.length);
         
-        // Send private state to joining player
+        io.to(gameId).emit('game_state', publicState);
         socket.emit('private_state', game.getPrivateGameState(socket.id));
         
-        console.log(`✅ Player ${playerName} joined game ${gameId}`);
+        console.log(`✅ Player ${playerName} joined game ${gameId} - broadcasted to all`);
       } else {
         socket.emit('join_failed', { reason: 'Game is full or already started' });
       }
@@ -1310,14 +1847,14 @@ io.on('connection', (socket) => {
       
       if (game && game.castVote(socket.id, vote)) {
         io.to(gameId).emit('game_state', game.getPublicGameState());
-        console.log(`🗳️ Vote cast in game ${gameId}`);
+        console.log(`🗳️ Vote received from ${socket.id}: ${vote}`);
       }
     } catch (error) {
       console.error('❌ Error in cast_vote:', error);
       socket.emit('error', error.message);
     }
   });
-  
+
   socket.on('check_plot', (data) => {
     try {
       const { gameId } = data;
@@ -1327,52 +1864,81 @@ io.on('connection', (socket) => {
         const result = game.checkPlot();
         io.to(gameId).emit('plot_check_result', result);
         io.to(gameId).emit('game_state', game.getPublicGameState());
-        console.log(`🎯 Plot checked in game ${gameId}`);
+        console.log(`🎯 Plot checked in game ${gameId}: ${result.activated ? 'ACTIVATED' : 'Not activated'}`);
       }
     } catch (error) {
       console.error('❌ Error in check_plot:', error);
       socket.emit('error', error.message);
     }
   });
-  
+
   socket.on('submit_supply_cards', (data) => {
     try {
       const { gameId, cardIds } = data;
       const game = games.get(gameId);
       
-      if (game && game.submitSupplyCards(socket.id, cardIds)) {
+      if (game) {
+        const result = game.submitSupplyCards(socket.id, cardIds);
+        
+        // Update game state for all players
         io.to(gameId).emit('game_state', game.getPublicGameState());
         
-        // Send updated private state to player
-        socket.emit('private_state', game.getPrivateGameState(socket.id));
+        // Update private states
+        game.players.forEach((player, playerId) => {
+          io.to(playerId).emit('private_state', game.getPrivateGameState(playerId));
+        });
         
-        console.log(`🎴 Supply cards submitted in game ${gameId}`);
+        // ENHANCED: Broadcast trap disarm result if all submitted
+        if (result.allSubmitted && result.disarmResult) {
+          io.to(gameId).emit('disarm_result', result.disarmResult);
+          
+          // Add notification for all players
+          const notification = {
+            type: result.disarmResult.success ? 'success' : 'error',
+            message: result.disarmResult.success ? 
+              `🔓 Trap at ${result.disarmResult.location} disarmed!` : 
+              `💥 Trap at ${result.disarmResult.location} triggered! Mr. Coral takes damage.`,
+            details: `Contributed: ${result.disarmResult.totalValue}/${result.disarmResult.requiredValue} points. ${result.disarmResult.trapsRemaining} traps remaining.`
+          };
+          
+          io.to(gameId).emit('notification', notification);
+        }
+        
+        console.log(`🎴 Supply cards submitted in game ${gameId} - All submitted: ${result.allSubmitted}`);
       }
     } catch (error) {
       console.error('❌ Error in submit_supply_cards:', error);
       socket.emit('error', error.message);
     }
   });
-  
+
   socket.on('collect_clues', (data) => {
     try {
-      const { gameId, weaponClaim, locationClaim } = data;
+      const { gameId, claimData } = data;
       const game = games.get(gameId);
       
-      if (game && game.collectClues(socket.id, weaponClaim, locationClaim)) {
+      if (game) {
+        const result = game.collectClues(socket.id, claimData);
+        
+        // Update game state for all players
         io.to(gameId).emit('game_state', game.getPublicGameState());
         
-        // Send updated private state to bodyguard
-        socket.emit('private_state', game.getPrivateGameState(socket.id));
+        // Update private states
+        game.players.forEach((player, playerId) => {
+          io.to(playerId).emit('private_state', game.getPrivateGameState(playerId));
+        });
         
-        console.log(`🔍 Clues collected in game ${gameId}`);
+        // ENHANCED: Broadcast clue collection result
+        io.to(gameId).emit('clue_collection_result', result);
+        
+        console.log(`🔍 Clues collected in game ${gameId} by ${result.bodyguardName}`);
       }
     } catch (error) {
       console.error('❌ Error in collect_clues:', error);
       socket.emit('error', error.message);
     }
   });
-  
+
   socket.on('distribute_supplies', (data) => {
     try {
       const { gameId } = data;
@@ -1381,7 +1947,7 @@ io.on('connection', (socket) => {
       if (game && game.distributeSupplies(socket.id)) {
         io.to(gameId).emit('game_state', game.getPublicGameState());
         
-        // Send updated private states to all players
+        // Update private states
         game.players.forEach((player, playerId) => {
           io.to(playerId).emit('private_state', game.getPrivateGameState(playerId));
         });
@@ -1393,7 +1959,7 @@ io.on('connection', (socket) => {
       socket.emit('error', error.message);
     }
   });
-  
+
   socket.on('final_accusation', (data) => {
     try {
       const { gameId, who, where, what } = data;
@@ -1403,14 +1969,14 @@ io.on('connection', (socket) => {
         const result = game.makeFinalAccusation(who, where, what);
         io.to(gameId).emit('final_accusation_result', result);
         io.to(gameId).emit('game_state', game.getPublicGameState());
-        console.log(`⚖️ Final accusation made in game ${gameId}`);
+        console.log(`⚖️ Final accusation made in game ${gameId}: ${result.correct ? 'CORRECT' : 'INCORRECT'}`);
       }
     } catch (error) {
       console.error('❌ Error in final_accusation:', error);
       socket.emit('error', error.message);
     }
   });
-  
+
   socket.on('begin_conspiracy', (data) => {
     try {
       const { gameId } = data;
@@ -1433,22 +1999,42 @@ io.on('connection', (socket) => {
       
       if (game && game.finishConspiracyPhase()) {
         io.to(gameId).emit('game_state', game.getPublicGameState());
-        console.log(`🎯 First round started in game ${gameId}`);
+        console.log(`🤫 Conspiracy phase finished in game ${gameId}`);
       }
     } catch (error) {
       console.error('❌ Error in finish_conspiracy:', error);
       socket.emit('error', error.message);
     }
   });
-  
-  socket.on('use_instant_disarm', (data) => {
+
+  socket.on('prepare_supply_distribution', (data) => {
     try {
-      const { gameId, cardId } = data;
+      const { gameId } = data;
       const game = games.get(gameId);
       
       if (game) {
-        const result = game.useInstantDisarm(socket.id, cardId);
-        io.to(gameId).emit('instant_disarm_result', result);
+        const result = game.prepareSupplyDistribution(socket.id);
+        
+        // Send distribution interface to scout
+        socket.emit('supply_distribution_prepared', result);
+        
+        console.log(`🎒 Supply distribution prepared in game ${gameId}`);
+      }
+    } catch (error) {
+      console.error('❌ Error in prepare_supply_distribution:', error);
+      socket.emit('error', error.message);
+    }
+  });
+
+  socket.on('execute_supply_distribution', (data) => {
+    try {
+      const { gameId, distribution } = data;
+      const game = games.get(gameId);
+      
+      if (game) {
+        const result = game.executeSupplyDistribution(socket.id, distribution);
+        
+        // Update game state for all players
         io.to(gameId).emit('game_state', game.getPublicGameState());
         
         // Update private states
@@ -1456,57 +2042,20 @@ io.on('connection', (socket) => {
           io.to(playerId).emit('private_state', game.getPrivateGameState(playerId));
         });
         
-        console.log(`⚡ Instant disarm used in game ${gameId}`);
+        console.log(`🎒 Supply distribution executed in game ${gameId}`);
       }
     } catch (error) {
-      console.error('❌ Error in use_instant_disarm:', error);
+      console.error('❌ Error in execute_supply_distribution:', error);
       socket.emit('error', error.message);
-    }
-  });
-  
-  socket.on('propose_final_team', (data) => {
-    try {
-      const { gameId, teamMemberIds } = data;
-      const game = games.get(gameId);
-      
-      if (game && game.proposeFinalTeam(socket.id, teamMemberIds)) {
-        io.to(gameId).emit('game_state', game.getPublicGameState());
-        console.log(`📋 Final team proposed in game ${gameId}`);
-      }
-    } catch (error) {
-      console.error('❌ Error in propose_final_team:', error);
-      socket.emit('error', error.message);
-    }
-  });
-  
-  socket.on('disconnect', () => {
-    console.log('🔌 Player disconnected:', socket.id);
-    
-    // Remove player from all games
-    for (const [gameId, game] of games) {
-      if (game.players.has(socket.id)) {
-        game.removePlayer(socket.id);
-        io.to(gameId).emit('game_state', game.getPublicGameState());
-        
-        // Remove empty games
-        if (game.players.size === 0) {
-          games.delete(gameId);
-        }
-      }
     }
   });
 });
 
-// Start server
+// Add this at the very end of server.js
 const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🕵️ Clue Conspiracy server running on port ${PORT}`);
-  console.log(`🌐 Server is ready for players!`);
+server.listen(PORT, () => {
+  console.log(`🌟 Clue Conspiracy server is running on port ${PORT}`);
+  console.log(`🔗 Open http://localhost:${PORT} in your browser`);
+  console.log(`🎮 Ready for players to join!`);
 });
-
-// Keep the process alive
-process.on('SIGTERM', () => {
-  console.log('🛑 Received SIGTERM, shutting down gracefully');
-  process.exit(0);
-}); 
