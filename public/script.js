@@ -8,13 +8,59 @@ let privateState = null;
 let selectedCards = [];
 let notifications = [];
 let activityUpdateInterval;
+let isInGame = false;
+
+// Selection state for scout
+let scoutSelections = {
+    location: null,
+    bodyguard: null,
+    teamMembers: []
+};
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing...');
+    
+    // COMPLETELY RESET GAME STATE ON PAGE LOAD
+    gameState = null;
+    privateState = null;
+    isInGame = false;
+    playerId = null;
+    gameId = null;
+    selectedCards = [];
+    scoutSelections = {
+        location: null,
+        bodyguard: null,
+        teamMembers: []
+    };
+    
+    // FORCE hide game screen and show login screen
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
+    });
+    
+    // Hide waiting indicator and activity display initially
+    const waitingIndicator = document.getElementById('waiting-indicator');
+    const activityDisplay = document.getElementById('current-activity');
+    
+    if (waitingIndicator) {
+        waitingIndicator.classList.add('hidden');
+    }
+    if (activityDisplay) {
+        activityDisplay.classList.add('hidden');
+    }
+    
+    // FORCE show login screen
+    const loginScreen = document.getElementById('login-screen');
+    if (loginScreen) {
+        loginScreen.classList.add('active');
+    }
+    
+    // Initialize socket after setting up the UI
     initializeSocket();
     setupEventListeners();
-    showScreen('login-screen');
+    
+    console.log('✅ Login screen should now be visible');
 });
 
 function initializeSocket() {
@@ -29,25 +75,40 @@ function initializeSocket() {
         console.log('Joined game:', data);
         gameId = data.gameId;
         playerId = data.playerId;
-        document.getElementById('game-id-display').textContent = gameId;
+        isInGame = true;
+        
+        // Update game ID display
+        const gameIdDisplay = document.getElementById('game-id-display');
+        if (gameIdDisplay) {
+            gameIdDisplay.textContent = gameId;
+        }
+        
+        // Show lobby screen
         showScreen('lobby-screen');
     });
 
     socket.on('join_failed', (data) => {
         console.error('Join failed:', data);
         alert('Failed to join game: ' + data.reason);
+        isInGame = false;
+        // Return to login screen on failure
+        showScreen('login-screen');
     });
 
     socket.on('game_state', (state) => {
         console.log('Game state received:', state);
         gameState = state;
-        updateUI();
+        if (isInGame) {
+            updateUI();
+        }
     });
 
     socket.on('private_state', (state) => {
         console.log('Private state received:', state);
         privateState = state;
-        updatePrivateUI();
+        if (isInGame) {
+            updatePrivateUI();
+        }
     });
 
     socket.on('plot_revealed', (plot) => {
@@ -88,21 +149,44 @@ function initializeSocket() {
 
     socket.on('disconnect', () => {
         console.log('Disconnected from server');
+        isInGame = false;
+        // Return to login screen on disconnect
+        showScreen('login-screen');
     });
 
     socket.on('activity_update', (activity) => {
         console.log('Activity update:', activity);
-        updateActivityDisplay(activity);
+        if (isInGame) {
+            updateActivityDisplay(activity);
+        }
     });
 
     socket.on('game_log_update', (logEntry) => {
         console.log('Game log update:', logEntry);
-        addToGameLog(logEntry);
+        if (isInGame) {
+            addToGameLog(logEntry);
+        }
     });
 
     socket.on('notification', (notification) => {
         console.log('Notification:', notification);
         showNotification(notification);
+    });
+
+    // Reset selections when becoming scout
+    socket.on('game_state_updated', (data) => {
+        // ... existing code ...
+        
+        // Reset scout selections if we're the new scout
+        if (data.gameState.currentScout === playerId && data.gameState.phase === 'round_choose_team') {
+            scoutSelections = {
+                location: null,
+                bodyguard: null,
+                teamMembers: []
+            };
+        }
+        
+        // ... existing code ...
     });
 }
 
@@ -199,9 +283,70 @@ function setupEventListeners() {
     });
 
     // Dynamic form updates
-    document.addEventListener('change', (e) => {
-        if (e.target.id === 'bodyguard-select' || e.target.id === 'location-select') {
-            updateMissionConfirmButton();
+    const bodyguardSelect = document.getElementById('bodyguard-select');
+    const locationSelect = document.getElementById('location-select');
+    
+    if (bodyguardSelect) {
+        bodyguardSelect.addEventListener('change', updateMissionConfirmButton);
+    }
+    if (locationSelect) {
+        locationSelect.addEventListener('change', updateMissionConfirmButton);
+    }
+
+    // Final accusation setup
+    const proposeFinalTeamBtn = document.getElementById('propose-final-team-btn');
+    if (proposeFinalTeamBtn) {
+        proposeFinalTeamBtn.addEventListener('click', proposeFinalTeam);
+    }
+    
+    // 5-minute timer for final accusation
+    let finalAccusationTimer = null;
+    
+    socket.on('final_accusation_started', () => {
+        // Start 5-minute timer
+        finalAccusationTimer = setTimeout(() => {
+            alert('⏰ Time is up! The Conspiracy wins by default.');
+        }, 5 * 60 * 1000); // 5 minutes
+        
+        showGameNotification('info', '⏰ Final Accusation Phase', 'You have 5 minutes to discuss and vote!');
+    });
+    
+    socket.on('game_ended', () => {
+        if (finalAccusationTimer) {
+            clearTimeout(finalAccusationTimer);
+        }
+    });
+
+    // Conspiracy phase actions
+    const beginConspiracyBtn = document.getElementById('begin-conspiracy-btn');
+    if (beginConspiracyBtn) {
+        beginConspiracyBtn.addEventListener('click', beginConspiracyPhase);
+    }
+    
+    const finishConspiracyBtn = document.getElementById('finish-conspiracy-btn');
+    if (finishConspiracyBtn) {
+        finishConspiracyBtn.addEventListener('click', finishConspiracyPhase);
+    }
+
+    // Add instant disarm result handler
+    socket.on('instant_disarm_result', (result) => {
+        console.log('Instant disarm result:', result);
+        if (result.success) {
+            showGameNotification('success', '⚡ Trap Instantly Disarmed!', 'The trap has been neutralized without using supply cards.');
+        }
+    });
+
+    // Location selection (click on board)
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.location-card.selectable')) {
+            handleLocationSelection(e.target.closest('.location-card'));
+        }
+    });
+    
+    // Player card selection
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.player-selection-card') && !e.target.closest('.player-selection-card').classList.contains('disabled')) {
+            handlePlayerCardSelection(e.target.closest('.player-selection-card'));
         }
     });
 }
@@ -243,45 +388,57 @@ function startGame() {
 }
 
 // Game action functions
-function beginConspiracyPhase() {
-    console.log('Beginning conspiracy phase...');
-    socket.emit('begin_conspiracy_phase', { gameId });
-}
-
-function revealPlot() {
-    console.log('Revealing plot...');
-    socket.emit('reveal_plot', { gameId });
-}
-
-function finishPlotting() {
-    console.log('Finishing plotting phase...');
-    socket.emit('finish_plotting', { gameId });
-}
-
 function confirmMission() {
-    const bodyguardSelect = document.getElementById('bodyguard-select');
-    const locationSelect = document.getElementById('location-select');
+    console.log('🎯 Scout confirming mission...');
     
-    if (!bodyguardSelect.value || !locationSelect.value) {
-        alert('Please select a bodyguard and location');
+    if (!scoutSelections.location || !scoutSelections.bodyguard) {
+        alert('Please select both a location and a bodyguard');
         return;
     }
     
-    // Get selected team members
-    const teamCheckboxes = document.querySelectorAll('#team-selection input[type="checkbox"]:checked');
-    const teamMemberIds = Array.from(teamCheckboxes).map(cb => cb.value);
+    console.log('Mission details:', scoutSelections);
     
-    console.log('Confirming mission...');
     socket.emit('propose_team', {
         gameId,
-        bodyguardId: bodyguardSelect.value,
-        teamMemberIds,
-        locationName: locationSelect.value
+        bodyguardId: scoutSelections.bodyguard,
+        teamMemberIds: scoutSelections.teamMembers,
+        locationName: scoutSelections.location
     });
+    
+    // Reset selections for next round
+    scoutSelections = {
+        location: null,
+        bodyguard: null,
+        teamMembers: []
+    };
 }
 
 function castVote(vote) {
-    console.log('Casting vote:', vote);
+    console.log('🗳️ Casting vote:', vote);
+    console.log('Current game state:', gameState);
+    console.log('Current phase:', gameState?.phase);
+    
+    // Add validation
+    if (!gameState || gameState.phase !== 'round_voting') {
+        console.error('Cannot vote - not in voting phase');
+        alert('Cannot vote right now. Game phase: ' + (gameState?.phase || 'unknown'));
+        return;
+    }
+    
+    // Disable voting buttons to prevent double-voting
+    const approveBtn = document.getElementById('vote-approve');
+    const rejectBtn = document.getElementById('vote-reject');
+    
+    if (approveBtn) approveBtn.disabled = true;
+    if (rejectBtn) rejectBtn.disabled = true;
+    
+    // Show visual feedback
+    const clickedBtn = document.getElementById(vote === 'approve' ? 'vote-approve' : 'vote-reject');
+    if (clickedBtn) {
+        clickedBtn.style.opacity = '0.7';
+        clickedBtn.textContent = vote === 'approve' ? '✅ Approved' : '❌ Rejected';
+    }
+    
     socket.emit('cast_vote', { gameId, vote });
 }
 
@@ -336,7 +493,10 @@ function submitFinalAccusation() {
 // UI update functions
 function updateUI() {
     console.log('Updating UI...');
-    if (!gameState) return;
+    if (!gameState || !isInGame) {
+        console.log('No game state or not in game, skipping UI update');
+        return;
+    }
     
     // Update basic info
     updateBasicInfo();
@@ -430,171 +590,416 @@ function updatePlayersGrid() {
 }
 
 function updateGameBoard() {
-    const locationsGrid = document.getElementById('locations-grid');
-    if (!locationsGrid || !gameState.locations) return;
+    const resortBoard = document.getElementById('resort-board');
+    if (!resortBoard || !gameState.locations) return;
     
-    locationsGrid.innerHTML = '';
-    
+    // Update each location card
     gameState.locations.forEach(location => {
-        const locationDiv = document.createElement('div');
-        locationDiv.className = `location-card ${location.visited ? 'visited' : ''}`;
+        const locationElement = document.querySelector(`[data-location="${location.name}"]`);
+        if (!locationElement) return;
         
-        let statusText = '';
-        if (location.name === gameState.safeLocation) statusText += '✅ Safe ';
-        if (location.playersPresent.length > 0) statusText += '👥 ';
+        const trapDisplay = locationElement.querySelector('.trap-display');
+        if (!trapDisplay) return;
         
-        locationDiv.innerHTML = `
-            <div class="location-name">${location.name}</div>
-            <div class="location-status">${statusText}</div>
-            <div class="location-info">
-                ${location.hasTraps ? `🎯 Trap (${location.trapValue})` : '✅ Clear'}
-                ${location.playersPresent.length > 0 ? `<br>Players: ${location.playersPresent.length}` : ''}
-            </div>
-        `;
-        locationsGrid.appendChild(locationDiv);
+        // Check if this is the safe location
+        if (location.name === gameState.safeLocation) {
+            trapDisplay.innerHTML = '<span class="safe-indicator">✅ SAFE</span>';
+            trapDisplay.classList.add('safe');
+        } else if (location.hasTraps) {
+            // Show trap information
+            trapDisplay.classList.remove('safe');
+            
+            let trapSuitsHTML = '';
+            if (location.trapSuit === 'Trip Wire') {
+                // Trip Wire Explosive shows both Triangle and Circle
+                trapSuitsHTML = `
+                    <div class="suit-symbol triangle">▲</div>
+                    <div class="suit-symbol circle">●</div>
+                `;
+            } else {
+                // Single suit trap (Triangle or Circle)
+                const suitSymbol = {
+                    'Triangle': '▲',
+                    'Circle': '●'
+                }[location.trapSuit] || '?';
+                
+                trapSuitsHTML = `<div class="suit-symbol ${location.trapSuit.toLowerCase()}">${suitSymbol}</div>`;
+            }
+            
+            trapDisplay.innerHTML = `
+                <span class="trap-value">${location.trapValue}</span>
+                <div class="trap-suits">
+                    ${trapSuitsHTML}
+                </div>
+            `;
+        } else {
+            // Trap has been disarmed
+            trapDisplay.innerHTML = '<span class="disarmed-indicator">🔓 DISARMED</span>';
+            trapDisplay.classList.add('disarmed');
+        }
+        
+        // Update location status
+        locationElement.classList.toggle('visited', location.visited);
+        locationElement.classList.toggle('current', location.playersPresent.includes('mr_coral'));
+        locationElement.classList.toggle('disarmed', !location.hasTraps && location.name !== gameState.safeLocation);
     });
+    
+    updateCoralPosition();
+}
+
+function updateCoralPosition() {
+    const coralIndicator = document.getElementById('coral-position');
+    if (!coralIndicator || !gameState.locations) return;
+    
+    // Find where Mr. Coral is
+    const coralLocation = gameState.locations.find(loc => 
+        loc.playersPresent.includes('mr_coral')
+    );
+    
+    if (coralLocation) {
+        // Position the indicator on the current location
+        const locationElement = document.querySelector(`[data-location="${coralLocation.name}"]`);
+        if (locationElement) {
+            const rect = locationElement.getBoundingClientRect();
+            const boardRect = document.getElementById('resort-board').getBoundingClientRect();
+            
+            coralIndicator.style.left = `${rect.left - boardRect.left + rect.width/2 - 15}px`;
+            coralIndicator.style.top = `${rect.top - boardRect.top + rect.height/2 - 15}px`;
+            coralIndicator.style.display = 'block';
+        }
+    } else {
+        coralIndicator.style.display = 'none';
+    }
 }
 
 function updateHealthTrackers() {
-    // Update Mr. Coral's health
-    const coralHealthElement = document.getElementById('coral-health');
-    if (coralHealthElement) {
-        const hearts = '♥'.repeat(gameState.coralHealth) + '♡'.repeat(3 - gameState.coralHealth);
-        coralHealthElement.textContent = hearts;
+    // Update storm tracker
+    const stormIndicators = document.getElementById('storm-indicators');
+    if (stormIndicators) {
+        stormIndicators.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+            const indicator = document.createElement('div');
+            indicator.className = `tracker-indicator storm-indicator ${i < gameState.stormTracker ? 'active' : ''}`;
+            indicator.textContent = '⛈️';
+            stormIndicators.appendChild(indicator);
+        }
     }
     
-    // Update storm tracker
-    const stormTrackerElement = document.getElementById('storm-tracker');
-    if (stormTrackerElement) {
-        const clouds = '☁'.repeat(gameState.stormTracker) + '☀'.repeat(3 - gameState.stormTracker);
-        stormTrackerElement.textContent = clouds;
+    // Update health tracker
+    const healthIndicators = document.getElementById('health-indicators');
+    if (healthIndicators) {
+        healthIndicators.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+            const indicator = document.createElement('div');
+            indicator.className = `tracker-indicator health-indicator ${i >= gameState.coralHealth ? 'lost' : ''}`;
+            indicator.textContent = '💖';
+            healthIndicators.appendChild(indicator);
+        }
     }
 }
 
 function updateScreenAndPanels() {
-    // Show appropriate screen
+    if (!gameState || !isInGame) return;
+
+    // Show game screen for all phases except lobby
     if (gameState.phase === 'lobby') {
         showScreen('lobby-screen');
-    } else {
-        showScreen('game-screen');
+        return;
     }
-    
-    // Hide all action panels
+
+    showScreen('game-screen');
+
+    // Hide all action panels first
     document.querySelectorAll('.action-panel').forEach(panel => {
         panel.style.display = 'none';
     });
-    
-    // Show appropriate action panel
+
+    // Show appropriate panel based on phase and player role
     switch (gameState.phase) {
-        case 'setup':
+        case 'conspiracy_setup':
             document.getElementById('setup-actions').style.display = 'block';
             break;
+        
         case 'conspiracy_plotting':
             document.getElementById('plotting-actions').style.display = 'block';
             break;
+        
         case 'round_choose_team':
+            // Only the current scout sees the team selection panel
             if (gameState.currentScout === playerId) {
                 document.getElementById('scout-actions').style.display = 'block';
+                console.log('🎯 Showing scout actions for current scout');
+            } else {
+                // Show waiting message for other players
+                console.log('⏰ Waiting for scout to choose team');
             }
             break;
+        
         case 'round_voting':
-            if (!gameState.votes || !gameState.votes.find(v => v[0] === playerId)) {
-                document.getElementById('voting-actions').style.display = 'block';
-                updateVotingDisplay();
-            }
+            console.log('🗳️ Showing voting panel');
+            document.getElementById('voting-actions').style.display = 'block';
+            updateVotingDisplay();
             break;
+        
         case 'round_plot_check':
             document.getElementById('plot-check-actions').style.display = 'block';
             break;
+        
         case 'round_disarm_traps':
             if (gameState.proposedMission && gameState.proposedMission.teamMembers.includes(playerId)) {
                 document.getElementById('disarming-actions').style.display = 'block';
             }
             break;
+        
         case 'round_collect_clues':
             if (gameState.currentBodyguard === playerId) {
                 document.getElementById('collecting-actions').style.display = 'block';
             }
             break;
+        
         case 'round_supply_distribution':
             if (gameState.currentScout === playerId) {
                 document.getElementById('supplying-actions').style.display = 'block';
             }
             break;
+        
+        case 'final_accusation_setup':
+            if (gameState.currentScout === playerId) {
+                document.getElementById('final-team-selection').style.display = 'block';
+            }
+            break;
+        
+        case 'final_accusation_voting':
+            document.getElementById('voting-actions').style.display = 'block';
+            updateVotingDisplay();
+            break;
+        
         case 'final_accusation':
             document.getElementById('final-accusation-actions').style.display = 'block';
             break;
+        
         case 'game_over':
             document.getElementById('game-over-actions').style.display = 'block';
             break;
+        
+        default:
+            console.log('Unknown phase:', gameState.phase);
     }
 }
 
 function updateFormOptions() {
+    if (!gameState || !gameState.players) return;
+    
+    // Make locations selectable
+    document.querySelectorAll('.location-card').forEach(card => {
+        card.classList.remove('selectable', 'selected');
+        const locationName = card.dataset.location;
+        
+        if (gameState.locations) {
+            const locationData = gameState.locations.find(loc => loc.name === locationName);
+            if (locationData && locationData.hasTraps) {
+                card.classList.add('selectable');
+            }
+        }
+    });
+    
+    // Update bodyguard selection cards
+    updateBodyguardCards();
+    
+    // Update team member selection cards
+    updateTeamMemberCards();
+    
     // Update bodyguard selection
     const bodyguardSelect = document.getElementById('bodyguard-select');
-    if (bodyguardSelect && gameState.players) {
+    if (bodyguardSelect) {
+        const currentValue = bodyguardSelect.value;
         bodyguardSelect.innerHTML = '<option value="">Select a bodyguard...</option>';
+        
         gameState.players.forEach(player => {
+            // Scout cannot select themselves as bodyguard
+            // Previous bodyguard cannot be selected again (this should be validated server-side too)
             if (player.id !== playerId && player.id !== gameState.currentScout) {
                 const option = document.createElement('option');
                 option.value = player.id;
-                option.textContent = player.name;
+                option.textContent = `${player.name} (${player.character})`;
                 bodyguardSelect.appendChild(option);
             }
         });
+        
+        // Restore previous selection if still valid
+        if (currentValue && Array.from(bodyguardSelect.options).some(opt => opt.value === currentValue)) {
+            bodyguardSelect.value = currentValue;
+        }
     }
     
     // Update location selection
     const locationSelect = document.getElementById('location-select');
     if (locationSelect && gameState.locations) {
+        const currentValue = locationSelect.value;
         locationSelect.innerHTML = '<option value="">Select a location...</option>';
+        
         gameState.locations.forEach(location => {
             const option = document.createElement('option');
             option.value = location.name;
             option.textContent = location.name;
+            
+            // Mark safe location
             if (location.name === gameState.safeLocation) {
                 option.textContent += ' (Safe)';
             }
+            
+            // Mark if location has been visited or disarmed
+            if (!location.hasTraps) {
+                option.textContent += ' (Disarmed)';
+                option.disabled = true; // Can't visit disarmed locations
+            }
+            
             locationSelect.appendChild(option);
         });
+        
+        // Restore previous selection if still valid
+        if (currentValue && Array.from(locationSelect.options).some(opt => opt.value === currentValue && !opt.disabled)) {
+            locationSelect.value = currentValue;
+        }
     }
     
-    // Update team selection
+    // Update team member selection (optional additional team members)
     const teamSelection = document.getElementById('team-selection');
-    if (teamSelection && gameState.players) {
+    if (teamSelection) {
         teamSelection.innerHTML = '';
+        
         gameState.players.forEach(player => {
-            if (player.id !== playerId) {
+            // Don't include scout (automatically included) or selected bodyguard
+            if (player.id !== playerId && player.id !== gameState.currentScout) {
                 const label = document.createElement('label');
-                label.className = 'team-checkbox';
-                label.innerHTML = `
-                    <input type="checkbox" value="${player.id}">
-                    ${player.name}
-                `;
+                label.className = 'team-member';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = player.id;
+                checkbox.name = 'team-member';
+                
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(` ${player.name} (${player.character})`));
+                
                 teamSelection.appendChild(label);
             }
         });
     }
+    
+    // Update weapon claim options for bodyguard
+    const weaponClaimSelect = document.getElementById('weapon-claim-select');
+    if (weaponClaimSelect) {
+        weaponClaimSelect.innerHTML = '<option value="">None</option>';
+        
+        // Add all weapons as options for claiming
+        const weapons = [
+            'Poison', 'Knife', 'Rope', 'Wrench', 'Candlestick',
+            'Revolver', 'Lead Pipe', 'Dumbbell', 'Trophy'
+        ];
+        
+        weapons.forEach(weapon => {
+            const option = document.createElement('option');
+            option.value = weapon;
+            option.textContent = weapon;
+            weaponClaimSelect.appendChild(option);
+        });
+    }
+    
+    // Update location claim options for bodyguard
+    const locationClaimSelect = document.getElementById('location-claim-select');
+    if (locationClaimSelect && gameState.locations) {
+        locationClaimSelect.innerHTML = '<option value="">None</option>';
+        
+        gameState.locations.forEach(location => {
+            const option = document.createElement('option');
+            option.value = location.name;
+            option.textContent = location.name;
+            locationClaimSelect.appendChild(option);
+        });
+    }
+    
+    // Update final accusation forms
+    const accusationWho = document.getElementById('accusation-who');
+    if (accusationWho) {
+        accusationWho.innerHTML = '<option value="">Select character...</option>';
+        gameState.players.forEach(player => {
+            const option = document.createElement('option');
+            option.value = player.character;
+            option.textContent = `${player.character} (${player.name})`;
+            accusationWho.appendChild(option);
+        });
+    }
+    
+    const accusationWhere = document.getElementById('accusation-where');
+    if (accusationWhere && gameState.locations) {
+        accusationWhere.innerHTML = '<option value="">Select location...</option>';
+        gameState.locations.forEach(location => {
+            const option = document.createElement('option');
+            option.value = location.name;
+            option.textContent = location.name;
+            accusationWhere.appendChild(option);
+        });
+    }
+    
+    const accusationWhat = document.getElementById('accusation-what');
+    if (accusationWhat) {
+        accusationWhat.innerHTML = '<option value="">Select weapon...</option>';
+        const weapons = [
+            'Poison', 'Knife', 'Rope', 'Wrench', 'Candlestick',
+            'Revolver', 'Lead Pipe', 'Dumbbell', 'Trophy'
+        ];
+        
+        weapons.forEach(weapon => {
+            const option = document.createElement('option');
+            option.value = weapon;
+            option.textContent = weapon;
+            accusationWhat.appendChild(option);
+        });
+    }
+    
+    // Update the mission confirm button state
+    updateMissionConfirmButton();
 }
 
 function updateVotingDisplay() {
     const missionInfo = document.getElementById('mission-info');
-    if (missionInfo && gameState.proposedMission) {
-        const mission = gameState.proposedMission;
-        const scout = gameState.players.find(p => p.id === mission.scout);
-        const bodyguard = gameState.players.find(p => p.id === mission.bodyguard);
-        const teamMembers = mission.teamMembers.map(id => 
-            gameState.players.find(p => p.id === id)?.name || 'Unknown'
-        );
-        
-        missionInfo.innerHTML = `
-            <h4>Proposed Mission:</h4>
-            <p><strong>Scout:</strong> ${scout?.name}</p>
-            <p><strong>Bodyguard:</strong> ${bodyguard?.name}</p>
-            <p><strong>Location:</strong> ${mission.location}</p>
-            <p><strong>Team:</strong> ${teamMembers.join(', ')}</p>
-        `;
+    if (!missionInfo || !gameState || !gameState.proposedMission) return;
+    
+    const mission = gameState.proposedMission;
+    const scout = gameState.players.find(p => p.id === mission.scout);
+    const bodyguard = gameState.players.find(p => p.id === mission.bodyguard);
+    const teamMembers = mission.teamMembers.map(id => {
+        const player = gameState.players.find(p => p.id === id);
+        return player ? player.name : 'Unknown';
+    });
+    
+    missionInfo.innerHTML = `
+        <h4>🎯 Proposed Mission</h4>
+        <p><strong>Scout:</strong> ${scout?.name || 'Unknown'}</p>
+        <p><strong>Bodyguard:</strong> ${bodyguard?.name || 'Unknown'}</p>
+        <p><strong>Location:</strong> ${mission.location}</p>
+        <p><strong>Team Members:</strong> ${teamMembers.join(', ')}</p>
+        <p><strong>Team Size:</strong> ${mission.teamMembers.length} players</p>
+        <div style="margin-top: 16px; padding: 12px; background: rgba(255,107,107,0.1); border-radius: 8px;">
+            <strong>⚠️ Vote carefully!</strong> Failed votes advance the storm tracker.
+        </div>
+    `;
+    
+    // Reset voting buttons
+    const approveBtn = document.getElementById('vote-approve');
+    const rejectBtn = document.getElementById('vote-reject');
+    
+    if (approveBtn) {
+        approveBtn.disabled = false;
+        approveBtn.style.opacity = '1';
+        approveBtn.textContent = '👍 Approve';
+    }
+    
+    if (rejectBtn) {
+        rejectBtn.disabled = false;
+        rejectBtn.style.opacity = '1';
+        rejectBtn.textContent = '❌ Reject';
     }
 }
 
@@ -643,60 +1048,75 @@ function updatePrivateUI() {
 
 function updateSupplyCardsDisplay() {
     const supplyCardsContainer = document.getElementById('supply-cards');
-    const supplyCount = document.getElementById('supply-count');
+    const supplyCountElement = document.getElementById('supply-count');
     
-    if (!supplyCardsContainer || !privateState?.supplyCards) return;
+    if (!supplyCardsContainer || !privateState || !privateState.supplyCards) return;
     
-    supplyCount.textContent = privateState.supplyCards.length;
     supplyCardsContainer.innerHTML = '';
+    supplyCountElement.textContent = privateState.supplyCards.length;
     
     privateState.supplyCards.forEach(card => {
-        const cardDiv = document.createElement('div');
-        cardDiv.className = `supply-card ${selectedCards.includes(card) ? 'selected' : ''}`;
-        cardDiv.dataset.cardId = card.id;
+        const cardElement = document.createElement('div');
+        cardElement.className = `card supply ${selectedCards.includes(card.id) ? 'selected' : ''}`;
+        cardElement.setAttribute('data-card-id', card.id);
+        cardElement.setAttribute('data-suit', card.suit || 'none');
         
-        cardDiv.innerHTML = `
+        let suitDisplay = '';
+        if (card.suit === 'Triangle') {
+            suitDisplay = '<div class="card-suit triangle">▲</div>';
+        } else if (card.suit === 'Circle') {
+            suitDisplay = '<div class="card-suit circle">●</div>';
+        }
+        
+        cardElement.innerHTML = `
             <div class="card-value">${card.value}</div>
-            ${card.suit ? `<div class="card-suit">${card.suit}</div>` : ''}
+            ${suitDisplay}
         `;
         
-        supplyCardsContainer.appendChild(cardDiv);
+        cardElement.addEventListener('click', () => toggleSupplyCard(cardElement));
+        supplyCardsContainer.appendChild(cardElement);
     });
 }
 
 function updateClueCardsDisplay() {
     const clueCardsContainer = document.getElementById('clue-cards');
-    const clueCount = document.getElementById('clue-count');
+    const clueCountElement = document.getElementById('clue-count');
     
-    if (!clueCardsContainer || !privateState?.clueCards) return;
+    if (!clueCardsContainer || !privateState || !privateState.clueCards) return;
     
-    clueCount.textContent = privateState.clueCards.length;
     clueCardsContainer.innerHTML = '';
+    clueCountElement.textContent = privateState.clueCards.length;
     
     privateState.clueCards.forEach(card => {
-        const cardDiv = document.createElement('div');
-        cardDiv.className = 'clue-card';
+        const cardElement = document.createElement('div');
+        cardElement.className = 'card clue';
         
         let cardContent = '';
         switch (card.cardType) {
             case 'weapon':
-                cardContent = `🔫 ${card.content}`;
+                cardContent = `🔪 Weapon: ${card.content}`;
                 break;
             case 'location':
-                cardContent = `📍 ${card.content}`;
+                cardContent = `📍 Location: ${card.content}`;
                 break;
             case 'instant_disarm':
                 cardContent = '⚡ Instant Disarm';
+                // Add button for instant disarm if in disarming phase
+                if (gameState.phase === 'round_disarm_traps' && 
+                    gameState.proposedMission && 
+                    gameState.proposedMission.teamMembers.includes(playerId)) {
+                    cardContent += '<button class="btn btn-warning btn-sm" onclick="useInstantDisarm(\'' + card.id + '\')">Use Now</button>';
+                }
                 break;
             case 'no_clue':
                 cardContent = '❌ No Clue Found';
                 break;
             default:
-                cardContent = 'Unknown Clue';
+                cardContent = '❓ Unknown Clue';
         }
         
-        cardDiv.innerHTML = `<div class="card-content">${cardContent}</div>`;
-        clueCardsContainer.appendChild(cardDiv);
+        cardElement.innerHTML = `<div class="clue-content">${cardContent}</div>`;
+        clueCardsContainer.appendChild(cardElement);
     });
 }
 
@@ -742,12 +1162,21 @@ function updateContributionPreview() {
 }
 
 function updateMissionConfirmButton() {
+    const confirmBtn = document.getElementById('confirm-mission-btn');
     const bodyguardSelect = document.getElementById('bodyguard-select');
     const locationSelect = document.getElementById('location-select');
-    const confirmButton = document.getElementById('confirm-mission-btn');
     
-    if (confirmButton) {
-        confirmButton.disabled = !bodyguardSelect.value || !locationSelect.value;
+    if (!confirmBtn || !bodyguardSelect || !locationSelect) return;
+    
+    const isValid = bodyguardSelect.value && locationSelect.value;
+    confirmBtn.disabled = !isValid;
+    
+    if (isValid) {
+        confirmBtn.textContent = 'Confirm Mission';
+        confirmBtn.classList.remove('btn-disabled');
+    } else {
+        confirmBtn.textContent = 'Select Bodyguard & Location';
+        confirmBtn.classList.add('btn-disabled');
     }
 }
 
@@ -789,12 +1218,37 @@ function showGameEnd(result) {
 
 function showScreen(screenId) {
     console.log('Showing screen:', screenId);
+    
+    // Hide all screens
     document.querySelectorAll('.screen').forEach(screen => {
         screen.classList.remove('active');
     });
+    
+    // Show target screen
     const targetScreen = document.getElementById(screenId);
     if (targetScreen) {
         targetScreen.classList.add('active');
+    }
+    
+    // Hide waiting indicator and activity display when not in game screen
+    const waitingIndicator = document.getElementById('waiting-indicator');
+    const activityDisplay = document.getElementById('current-activity');
+    
+    if (screenId !== 'game-screen') {
+        if (waitingIndicator) {
+            waitingIndicator.classList.add('hidden');
+        }
+        if (activityDisplay) {
+            activityDisplay.classList.add('hidden');
+        }
+    } else {
+        // Only show these in game screen when we have valid game state
+        if (waitingIndicator && isInGame) {
+            waitingIndicator.classList.remove('hidden');
+        }
+        if (activityDisplay && isInGame) {
+            activityDisplay.classList.remove('hidden');
+        }
     }
 }
 
@@ -873,8 +1327,13 @@ function showGameNotification(type, message, details = '') {
 
 // Update the UI functions to show better status
 function updateActivityDisplay(activity) {
+    if (!isInGame) return;
+    
     const activityElement = document.getElementById('current-activity');
     if (!activityElement) return;
+    
+    // Show the activity display
+    activityElement.classList.remove('hidden');
     
     if (activity) {
         activityElement.innerHTML = `
@@ -952,6 +1411,8 @@ function formatTimestamp(timestamp) {
 
 // Update the UI functions to show better status
 function updateWaitingIndicators() {
+    if (!isInGame || !gameState) return;
+    
     const waitingElement = document.getElementById('waiting-indicator');
     if (!waitingElement) return;
     
@@ -967,9 +1428,9 @@ function updateWaitingIndicators() {
                 <div class="waiting-text">Waiting for: ${waitingFor}</div>
             </div>
         `;
-        waitingElement.style.display = 'block';
+        waitingElement.classList.remove('hidden');
     } else {
-        waitingElement.style.display = 'none';
+        waitingElement.classList.add('hidden');
     }
 }
 
@@ -982,5 +1443,248 @@ function updateGameLog(gameLogEntries) {
     
     gameLogEntries.slice(-20).forEach(entry => {
         addToGameLog(entry);
+    });
+}
+
+function proposeFinalTeam() {
+    const selectedTeamMembers = [];
+    const checkboxes = document.querySelectorAll('#final-team-selection input[type="checkbox"]:checked');
+    
+    checkboxes.forEach(checkbox => {
+        selectedTeamMembers.push(checkbox.value);
+    });
+    
+    if (selectedTeamMembers.length === 0) {
+        alert('Please select at least one team member for the final round.');
+        return;
+    }
+    
+    console.log('📋 Proposing final team...');
+    socket.emit('propose_final_team', {
+        gameId: gameId,
+        teamMemberIds: selectedTeamMembers
+    });
+}
+
+// Handle conspiracy phase
+function beginConspiracyPhase() {
+    console.log('🤫 Beginning conspiracy phase...');
+    socket.emit('begin_conspiracy', { gameId });
+}
+
+function finishConspiracyPhase() {
+    console.log('🎯 Finishing conspiracy phase...');
+    socket.emit('finish_conspiracy', { gameId });
+}
+
+// Handle instant disarm
+function useInstantDisarm(cardId) {
+    console.log('⚡ Using instant disarm card...');
+    socket.emit('use_instant_disarm', { gameId, cardId });
+}
+
+function handleLocationSelection(locationCard) {
+    const locationName = locationCard.dataset.location;
+    
+    // Clear previous selection
+    document.querySelectorAll('.location-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Select new location
+    locationCard.classList.add('selected');
+    scoutSelections.location = locationName;
+    
+    // Update UI
+    updateSelectedLocation(locationName);
+    updateMissionSummary();
+    updateConfirmButton();
+}
+
+function handlePlayerCardSelection(playerCard) {
+    const playerId = playerCard.dataset.playerId;
+    const selectionType = playerCard.dataset.selectionType;
+    
+    if (selectionType === 'bodyguard') {
+        // Clear previous bodyguard selection
+        document.querySelectorAll('.player-selection-card[data-selection-type="bodyguard"]').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Select new bodyguard
+        playerCard.classList.add('selected');
+        scoutSelections.bodyguard = playerId;
+        
+        updateSelectedBodyguard(playerId);
+    } else if (selectionType === 'team-member') {
+        // Toggle team member selection
+        if (playerCard.classList.contains('selected')) {
+            playerCard.classList.remove('selected');
+            scoutSelections.teamMembers = scoutSelections.teamMembers.filter(id => id !== playerId);
+        } else {
+            playerCard.classList.add('selected');
+            scoutSelections.teamMembers.push(playerId);
+        }
+        
+        updateSelectedTeamMembers();
+    }
+    
+    updateMissionSummary();
+    updateConfirmButton();
+}
+
+function updateSelectedLocation(locationName) {
+    const selectedLocation = document.getElementById('selected-location');
+    if (selectedLocation) {
+        const valueSpan = selectedLocation.querySelector('.selection-value');
+        if (valueSpan) {
+            valueSpan.textContent = locationName;
+            valueSpan.style.color = 'var(--resort-coral)';
+        }
+    }
+}
+
+function updateSelectedBodyguard(playerId) {
+    const selectedBodyguard = document.getElementById('selected-bodyguard');
+    if (selectedBodyguard && gameState) {
+        const player = gameState.players.find(p => p.id === playerId);
+        const valueSpan = selectedBodyguard.querySelector('.selection-value');
+        if (valueSpan && player) {
+            valueSpan.textContent = `${player.name} (${player.character})`;
+            valueSpan.style.color = 'var(--resort-coral)';
+        }
+    }
+}
+
+function updateSelectedTeamMembers() {
+    const selectedTeamMembers = document.getElementById('selected-team-members');
+    if (selectedTeamMembers && gameState) {
+        const valueSpan = selectedTeamMembers.querySelector('.selection-value');
+        if (valueSpan) {
+            if (scoutSelections.teamMembers.length === 0) {
+                valueSpan.textContent = 'You + Bodyguard';
+                valueSpan.style.color = 'var(--gray-medium)';
+            } else {
+                const memberNames = scoutSelections.teamMembers.map(id => {
+                    const player = gameState.players.find(p => p.id === id);
+                    return player ? player.name : 'Unknown';
+                });
+                valueSpan.textContent = `You + Bodyguard + ${memberNames.join(', ')}`;
+                valueSpan.style.color = 'var(--resort-coral)';
+            }
+        }
+    }
+}
+
+function updateMissionSummary() {
+    const summaryContent = document.getElementById('mission-summary-content');
+    if (!summaryContent) return;
+    
+    if (!scoutSelections.location || !scoutSelections.bodyguard) {
+        summaryContent.innerHTML = '<p>Select a location and bodyguard to see mission details</p>';
+        return;
+    }
+    
+    const bodyguardPlayer = gameState.players.find(p => p.id === scoutSelections.bodyguard);
+    const teamSize = 2 + scoutSelections.teamMembers.length; // Scout + Bodyguard + additional
+    
+    const memberNames = scoutSelections.teamMembers.map(id => {
+        const player = gameState.players.find(p => p.id === id);
+        return player ? player.name : 'Unknown';
+    });
+    
+    const allTeamMembers = ['You', bodyguardPlayer?.name || 'Unknown', ...memberNames];
+    
+    summaryContent.innerHTML = `
+        <div class="summary-item">
+            <span class="summary-label">📍 Destination:</span>
+            <span class="summary-value">${scoutSelections.location}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">🛡️ Bodyguard:</span>
+            <span class="summary-value">${bodyguardPlayer?.name || 'Unknown'}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">👥 Team Size:</span>
+            <span class="summary-value">${teamSize} players</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">🎯 Mission Team:</span>
+            <span class="summary-value">${allTeamMembers.join(', ')}</span>
+        </div>
+    `;
+}
+
+function updateConfirmButton() {
+    const confirmBtn = document.getElementById('confirm-mission-btn');
+    if (!confirmBtn) return;
+    
+    const isValid = scoutSelections.location && scoutSelections.bodyguard;
+    
+    confirmBtn.disabled = !isValid;
+    
+    if (isValid) {
+        confirmBtn.textContent = '🚀 Launch Mission';
+        confirmBtn.classList.remove('btn-disabled');
+    } else {
+        confirmBtn.innerHTML = '<span class="btn-icon">⚠️</span>Select Location & Bodyguard';
+        confirmBtn.classList.add('btn-disabled');
+    }
+}
+
+function updateBodyguardCards() {
+    const bodyguardCards = document.getElementById('bodyguard-cards');
+    if (!bodyguardCards) return;
+    
+    bodyguardCards.innerHTML = '';
+    
+    gameState.players.forEach(player => {
+        // Skip scout and previous bodyguard
+        if (player.id === playerId || player.id === gameState.previousRoles?.bodyguard) {
+            return;
+        }
+        
+        const card = document.createElement('div');
+        card.className = 'player-selection-card';
+        card.dataset.playerId = player.id;
+        card.dataset.selectionType = 'bodyguard';
+        
+        card.innerHTML = `
+            <div class="player-card-name">${player.name}</div>
+            <div class="player-card-character">${player.character}</div>
+        `;
+        
+        bodyguardCards.appendChild(card);
+    });
+}
+
+function updateTeamMemberCards() {
+    const teamMemberCards = document.getElementById('team-member-cards');
+    if (!teamMemberCards) return;
+    
+    teamMemberCards.innerHTML = '';
+    
+    gameState.players.forEach(player => {
+        // Skip scout and selected bodyguard
+        if (player.id === playerId || player.id === scoutSelections.bodyguard) {
+            return;
+        }
+        
+        const card = document.createElement('div');
+        card.className = 'player-selection-card';
+        card.dataset.playerId = player.id;
+        card.dataset.selectionType = 'team-member';
+        
+        // Mark as selected if already selected
+        if (scoutSelections.teamMembers.includes(player.id)) {
+            card.classList.add('selected');
+        }
+        
+        card.innerHTML = `
+            <div class="player-card-name">${player.name}</div>
+            <div class="player-card-character">${player.character}</div>
+        `;
+        
+        teamMemberCards.appendChild(card);
     });
 } 

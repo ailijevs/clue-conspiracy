@@ -102,8 +102,161 @@
                 <!-- Left Panel: Game Board -->
                 <div class="game-board">
                     <h2>🏝️ Black Adder Resort</h2>
-                    <div class="locations-grid" id="locations-grid">
-                        <!-- Locations populated by JS -->
+                    <div class="resort-board-container">
+                        <div class="resort-board" id="resort-board">
+                            
+                            <!-- Top Row Locations -->
+                            <div class="location-card top-left" data-location="Palm Lounge">
+                                <div class="location-image">🌴</div>
+                                <div class="location-name">PALM LOUNGE</div>
+                                <div class="trap-display">
+                                    <span class="trap-value">7</span>
+                                    <div class="trap-suits">
+                                        <div class="suit-symbol triangle">▲</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="location-card top-center" data-location="Lifeguard Post">
+                                <div class="location-image">🏖️</div>
+                                <div class="location-name">LIFEGUARD POST</div>
+                                <div class="trap-display">
+                                    <span class="trap-value">5</span>
+                                    <div class="trap-suits">
+                                        <div class="suit-symbol circle">●</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="location-card top-right" data-location="Hidden Cove">
+                                <div class="location-image">🏞️</div>
+                                <div class="location-name">HIDDEN COVE</div>
+                                <div class="trap-display">
+                                    <span class="trap-value">5</span>
+                                    <div class="trap-suits">
+                                        <div class="suit-symbol spades">♠</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Left Side Locations -->
+                            <div class="location-card left-top" data-location="Utility Room">
+                                <div class="location-image">🔧</div>
+                                <div class="location-name">UTILITY ROOM</div>
+                                <div class="trap-display">
+                                    <span class="trap-value">5</span>
+                                    <div class="trap-suits">
+                                        <div class="suit-symbol diamonds">♦</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="location-card left-bottom" data-location="Botanical Spa">
+                                <div class="location-image">🌺</div>
+                                <div class="location-name">BOTANICAL SPA</div>
+                                <div class="trap-display">
+                                    <span class="trap-value">7</span>
+                                    <div class="trap-suits">
+                                        <div class="suit-symbol hearts">♥</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Side Locations -->
+                            <div class="location-card right-top" data-location="Royal Villa">
+                                <div class="location-image">🏰</div>
+                                <div class="location-name">ROYAL VILLA</div>
+                                <div class="trap-display">
+                                    <span class="trap-value">4</span>
+                                    <div class="trap-suits">
+                                        <div class="suit-symbol spades">♠</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Bottom Row Locations -->
+                            <div class="location-card bottom-left" data-location="Infinity Pool">
+                                <div class="location-image">🏊‍♀️</div>
+                                <div class="location-name">INFINITY POOL</div>
+                                <div class="trap-display">
+                                    <span class="trap-value">7</span>
+                                    <div class="trap-suits">
+                                        <div class="suit-symbol clubs">♣</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="location-card bottom-center" data-location="Concierge Station">
+                                <div class="location-image">🎩</div>
+                                <div class="location-name">CONCIERGE STATION</div>
+                                <div class="trap-display">
+                                    <span class="trap-value">5</span>
+                                    <div class="trap-suits">
+                                        <div class="suit-symbol diamonds">♦</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="location-card bottom-right" data-location="Observation Deck">
+                                <div class="location-image">🔭</div>
+                                <div class="location-name">OBSERVATION DECK</div>
+                                <div class="trap-display">
+                                    <span class="trap-value">5</span>
+                                    <div class="trap-suits">
+                                        <div class="suit-symbol diamonds">♦</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Central Logo Area -->
+                            <div class="central-area">
+                                <div class="game-logo">
+                                    <div class="logo-text">Clue</div>
+                                    <div class="logo-subtext">CONSPIRACY</div>
+                                </div>
+                                
+                                <!-- Supply Areas -->
+                                <div class="supply-areas">
+                                    <div class="supply-deck">
+                                        <div class="supply-label">SUPPLY</div>
+                                        <div class="supply-sublabel">Gather Supplies Here</div>
+                                    </div>
+                                    <div class="discard-pile">
+                                        <div class="discard-label">DISCARD</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Mr. Coral Position Indicator -->
+                            <div class="coral-position" id="coral-position">
+                                <div class="coral-avatar">👨‍💼</div>
+                                <div class="coral-label">MR. CORAL</div>
+                            </div>
+                            
+                        </div>
+                        
+                        <!-- Bottom Trackers -->
+                        <div class="board-trackers">
+                            <div class="tracker storm-tracker">
+                                <div class="tracker-label">STORM TRACKER</div>
+                                <div class="tracker-circles" id="storm-circles">
+                                    <div class="tracker-circle"></div>
+                                    <div class="tracker-circle"></div>
+                                    <div class="tracker-circle"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="tracker health-tracker">
+                                <div class="tracker-label">HEALTH TRACKER</div>
+                                <div class="tracker-label-sub">MR. CORAL'S</div>
+                                <div class="tracker-label-danger">IN DANGER!</div>
+                                <div class="tracker-circles" id="health-circles">
+                                    <div class="tracker-circle health-circle active">❤️</div>
+                                    <div class="tracker-circle health-circle active">❤️</div>
+                                    <div class="tracker-circle health-circle active">❤️</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -156,7 +309,7 @@
                         <h3>🎭 Game Setup</h3>
                         <p>Roles have been assigned. Ready to begin the conspiracy phase?</p>
                     </div>
-                    <button id="start-conspiracy-btn" class="btn btn-primary">Begin Conspiracy Phase</button>
+                    <button id="begin-conspiracy-btn" class="btn btn-primary">Begin Conspiracy Phase</button>
                 </div>
 
                 <!-- Conspiracy Plotting -->
@@ -174,43 +327,67 @@
                             </ol>
                         </div>
                     </div>
-                    <div class="conspiracy-actions">
-                        <button id="reveal-plot-btn" class="btn btn-warning">Reveal Plot (Conspiracy Only)</button>
-                        <button id="finish-plotting-btn" class="btn btn-primary">Finish Plotting Phase</button>
-                    </div>
+                    <button id="finish-conspiracy-btn" class="btn btn-primary">Finish Plotting Phase</button>
                 </div>
 
                 <!-- Scout Actions -->
                 <div id="scout-actions" class="action-panel">
                     <div class="action-header">
                         <h3>🎯 Scout: Choose Your Mission</h3>
-                        <p>You are the Scout. Select your team and destination.</p>
+                        <p>Click on a location, then select your bodyguard and team members</p>
                     </div>
                     
-                    <div class="scout-form">
-                        <div class="form-group">
-                            <label>1. Choose Bodyguard:</label>
-                            <select id="bodyguard-select" class="form-control">
-                                <option value="">Select a bodyguard...</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>2. Choose Additional Team Members:</label>
-                            <div id="team-selection" class="team-selection">
-                                <!-- Team checkboxes populated by JS -->
+                    <div class="scout-selection-container">
+                        <!-- Step 1: Location Selection -->
+                        <div class="selection-step">
+                            <h4>1. Choose Location</h4>
+                            <p class="step-instruction">Click on a location on the board above ⬆️</p>
+                            <div id="selected-location" class="selected-item">
+                                <span class="selection-label">Selected:</span>
+                                <span class="selection-value">None</span>
                             </div>
-                            <small class="help-text">You and the bodyguard are automatically included</small>
                         </div>
-
-                        <div class="form-group">
-                            <label>3. Choose Location:</label>
-                            <select id="location-select" class="form-control">
-                                <option value="">Select a location...</option>
-                            </select>
+                        
+                        <!-- Step 2: Player Selection -->
+                        <div class="selection-step">
+                            <h4>2. Select Your Team</h4>
+                            <div class="team-selection-grid">
+                                <div class="bodyguard-selection">
+                                    <h5>👑 Choose Bodyguard</h5>
+                                    <div id="bodyguard-cards" class="player-cards-container">
+                                        <!-- Player cards populated by JS -->
+                                    </div>
+                                    <div id="selected-bodyguard" class="selected-item">
+                                        <span class="selection-label">Bodyguard:</span>
+                                        <span class="selection-value">None</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="team-members-selection">
+                                    <h5>👥 Additional Team Members (Optional)</h5>
+                                    <div id="team-member-cards" class="player-cards-container">
+                                        <!-- Player cards populated by JS -->
+                                    </div>
+                                    <div id="selected-team-members" class="selected-item">
+                                        <span class="selection-label">Team:</span>
+                                        <span class="selection-value">You + Bodyguard</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-
-                        <button id="confirm-mission-btn" class="btn btn-primary" disabled>Confirm Mission</button>
+                        
+                        <!-- Mission Summary -->
+                        <div class="mission-summary">
+                            <h4>🎯 Mission Summary</h4>
+                            <div id="mission-summary-content" class="summary-content">
+                                <p>Select a location and bodyguard to see mission details</p>
+                            </div>
+                        </div>
+                        
+                        <button id="confirm-mission-btn" class="btn btn-primary btn-large" disabled>
+                            <span class="btn-icon">🚀</span>
+                            Confirm Mission
+                        </button>
                     </div>
                 </div>
 
@@ -322,6 +499,18 @@
                         </div>
                     </div>
                     <button id="new-game-btn" class="btn btn-primary">New Game</button>
+                </div>
+
+                <!-- Final Team Selection -->
+                <div id="final-team-selection" class="action-panel">
+                    <div class="action-header">
+                        <h3>📋 Final Round Team Selection</h3>
+                        <p>Choose team members for the final clue gathering round.</p>
+                    </div>
+                    <div class="team-selection">
+                        <!-- Team checkboxes populated by JS -->
+                    </div>
+                    <button id="propose-final-team-btn" class="btn btn-primary">Propose Final Team</button>
                 </div>
             </div>
         </div>
